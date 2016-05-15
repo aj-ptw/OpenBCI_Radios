@@ -30,19 +30,19 @@ void loop() {
     radio.getSerialDataFromPicAndPutItInTheDevicesSerialBuffer();
   }
 
-  if (radio.thereIsDataInSerialBuffer()) {
-    if (radio.theLastTimeNewSerialDataWasAvailableWasLongEnough()){
-      radio.sendTheDevicesFirstPacketToTheHost();
-  }
-  }
-
-  if (radio.isTheDevicesRadioBufferFilledWithAllThePacketsFromTheHost) {
-    radio.writeTheDevicesRadioBufferToThePic();
-  }
-
   if (radio.isAStreamPacketWaitingForLaunch()) {
     if (radio.hasEnoughTimePassedToLaunchStreamPacket()) {
       radio.sendStreamPacketToTheHost();
     }
+  }
+
+  if (radio.thereIsDataInSerialBuffer()) {
+    if (radio.theLastTimeNewSerialDataWasAvailableWasLongEnough()){
+      radio.sendTheDevicesFirstPacketToTheHost();
+    }
+  }
+
+  if (radio.isTheDevicesRadioBufferFilledWithAllThePacketsFromTheHost) {
+    radio.writeTheDevicesRadioBufferToThePic();
   }
 }
