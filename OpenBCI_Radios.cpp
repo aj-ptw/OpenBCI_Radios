@@ -828,7 +828,7 @@ boolean OpenBCI_Radios_Class::isAStreamPacketWaitingForLaunch(void) {
  * @description Test to see if a char follows the stream tail byte format
  */
 boolean OpenBCI_Radios_Class::isAHeadByteChar(char newChar) {
-    return (newChar >> 4) == 0xC;
+    return (newChar >> 4) == 0xF;
 }
 
 /**
@@ -842,6 +842,7 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
     boolean success = storeCharToSerialBuffer(newChar);
     // Verify we have not over flowed
     if (!success) return newChar;
+    if (bufferSerial.numberOfPacketsToSend > 2) return newChar;
 
     // Process the new char
     switch (curStreamState) {
