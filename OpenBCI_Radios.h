@@ -100,7 +100,7 @@ public:
     boolean     hasStreamPacket(void);
     boolean     hostPacketToSend(void);
     boolean     isAStreamPacketWaitingForLaunch(void);
-    boolean     isATailByteChar(char newChar);
+    boolean     isAHeadByteChar(char newChar);
     void        ledFeedBackForPassThru(void);
     boolean     needToSetChannelNumber(void);
     boolean     needToSetPollTime(void);

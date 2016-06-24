@@ -827,7 +827,7 @@ boolean OpenBCI_Radios_Class::isAStreamPacketWaitingForLaunch(void) {
 /**
  * @description Test to see if a char follows the stream tail byte format
  */
-boolean OpenBCI_Radios_Class::isATailByteChar(char newChar) {
+boolean OpenBCI_Radios_Class::isAHeadByteChar(char newChar) {
     return (newChar >> 4) == 0xC;
 }
 
@@ -845,37 +845,6 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
 
     // Process the new char
     switch (curStreamState) {
-        case STREAM_STATE_TAIL:
-            // Set the type byte
-            streamPacketBuffer.typeByte = streamPacketBuffer.data[0];
-            // Change the state to ready
-            curStreamState = STREAM_STATE_READY;
-            // Is the current char equal to 0xCX where X is 0-F?
-            // if (isATailByteChar(newChar)) {
-            //     // Set the type byte
-            //     streamPacketBuffer.typeByte = newChar;
-            //     // Change the state to ready
-            //     curStreamState = STREAM_STATE_READY;
-            //     // Serial.println("SSR");
-            // } else {
-            //     // Reset the state machine
-            //     curStreamState = STREAM_STATE_INIT;
-            //     // Serial.println("SSI");
-            //     // Set bytes in to 0
-            //     streamPacketBuffer.bytesIn = 0;
-            //     // Test to see if this byte is a head byte, maybe if it's not a
-            //     //  tail byte then that's because a byte was dropped on the way
-            //     //  over from the Pic.
-            //     if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
-            //         // Move the state
-            //         curStreamState = STREAM_STATE_STORING;
-            //         // Store to the streamPacketBuffer
-            //         streamPacketBuffer.data[0] = newChar;
-            //         // Set to 1
-            //         streamPacketBuffer.bytesIn = 1;
-            //     }
-            // }
-            break;
         case STREAM_STATE_STORING:
             // Store to the stream packet buffer
             streamPacketBuffer.data[streamPacketBuffer.bytesIn] = newChar;
@@ -883,8 +852,10 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
             streamPacketBuffer.bytesIn++;
 
             if (streamPacketBuffer.bytesIn == 32) {
-                curStreamState = STREAM_STATE_TAIL;
-                // Serial.println("SST");
+                // Set the type byte
+                streamPacketBuffer.typeByte = streamPacketBuffer.data[0];
+                // Change the state to ready
+                curStreamState = STREAM_STATE_READY;
             }
 
             break;
@@ -900,7 +871,7 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
 
             break;
         case STREAM_STATE_INIT:
-            if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
+            if (isAHeadByteChar(newChar)) {
                 // Move the state
                 curStreamState = STREAM_STATE_STORING;
                 // Store to the streamPacketBuffer
