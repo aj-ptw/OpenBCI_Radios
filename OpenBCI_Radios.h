@@ -175,6 +175,7 @@ public:
     STREAM_STATE curStreamState;
 
     uint8_t radioMode;
+    volatile uint8_t ackCounter;
 
     unsigned long lastTimeNewSerialDataWasAvailable;
     unsigned long lastTimeHostHeardFromDevice;
