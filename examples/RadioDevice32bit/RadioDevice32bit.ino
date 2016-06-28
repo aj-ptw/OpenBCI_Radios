@@ -69,6 +69,7 @@ void loop() {
                     radio.sendStreamPacketToTheHost();
                 } else {
                     // packet loss incur
+                    // Serial.write("s");
                 }
 
             }
