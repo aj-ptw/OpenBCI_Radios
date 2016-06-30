@@ -39,11 +39,16 @@ void setup() {
 void loop() {
 
     // Is there a stream packet waiting to get sent to the PC
-    if (radio.hasStreamPacket()) {
-        // Send all the stream packets to the Driver/PC
-        //  For resiliancy there is an oppertunity to have multiple stream
-        //  packets waiting to get sent.
-        radio.sendStreamPackets();
+
+    while (radio.streamPacketFlag) {
+        Serial.write(radio.ringBuffer[radio.ringBufferRead]);
+        radio.ringBufferRead++;
+        if (radio.ringBufferRead >= 512) {
+            radio.ringBufferRead = 0;
+        }
+        if (radio.ringBufferRead == radio.ringBufferWrite) {
+            radio.streamPacketFlag = false;
+        }
     }
 
     // Is there data in the radio buffer ready to be sent to the Driver?

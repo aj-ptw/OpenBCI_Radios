@@ -193,6 +193,10 @@ void OpenBCI_Radios_Class::configureHost(void) {
     isHost = true;
     packetInTXRadioBuffer = false;
 
+    ringBufferRead = 0;
+    ringBufferWrite = 0;
+    streamPacketFlag = false;
+
     bufferCleanStreamPackets(OPENBCI_MAX_NUMBER_OF_BUFFERS);
 
     if (verbosePrintouts) {
@@ -412,7 +416,7 @@ boolean OpenBCI_Radios_Class::commsFailureTimeout(void) {
  * @return {boolean} - If there are packets to send
  */
 boolean OpenBCI_Radios_Class::hasStreamPacket(void) {
-    return bufferStreamPackets.numberOfPacketsToSend > 0;
+    return streamPacketFlag;
 }
 
 /**
@@ -1071,35 +1075,51 @@ void OpenBCI_Radios_Class::writeBufferToSerial(char *buffer, int length) {
  */
 void OpenBCI_Radios_Class::bufferAddStreamPacket(volatile char *data, int length) {
 
-    // Set the number of packets to 1 initally, it will only grow
-    if (bufferStreamPackets.numberOfPacketsToSend == 0) {
-        bufferStreamPackets.numberOfPacketsToSend = 1;
+    ringBuffer[ringBufferWrite] = 0xA0;
+    ringBufferWrite++;
+    int count = 1;
+    while (count < length) {
+        if (ringBufferWrite >= 512) {
+            ringBufferWrite = 0;
+        }
+        ringBuffer[ringBufferWrite] = data[count];
+        ringBufferWrite++;
+        count++;
     }
 
-    for (int i = 0; i < length; i++) {
-        // If positionWrite >= OPENBCI_BUFFER_LENGTH need to wrap around
-        if (currentPacketBufferStreamPacket->positionWrite >= OPENBCI_MAX_PACKET_SIZE_BYTES) {
-            // Go to the next packet
-            bufferStreamPackets.numberOfPacketsToSend++;
-            // Did we run out of buffers?
-            if (bufferStreamPackets.numberOfPacketsToSend >= OPENBCI_MAX_NUMBER_OF_BUFFERS) {
-                // this is bad, so something, throw error, explode... idk yet...
-                //  for now set currentPacketBufferSerial to NULL
-                currentPacketBufferStreamPacket = NULL;
-            } else {
-                // move the pointer 1 struct
-                currentPacketBufferStreamPacket++;
-            }
-        }
-        // We are only going to mess with the current packet if it's not null
-        if (currentPacketBufferStreamPacket) {
-            // Store the byte to current buffer at write postition
-            currentPacketBufferStreamPacket->data[currentPacketBufferStreamPacket->positionWrite] = data[i];
+    ringBuffer[ringBufferWrite] = outputGetStopByteFromByteId(data[0]);
+    ringBufferWrite++;
+    streamPacketFlag = true;
 
-            // Increment currentPacketBufferSerial write postion
-            currentPacketBufferStreamPacket->positionWrite++;
-        }
-    }
+    // // Set the number of packets to 1 initally, it will only grow
+    // if (bufferStreamPackets.numberOfPacketsToSend == 0) {
+    //     bufferStreamPackets.numberOfPacketsToSend = 1;
+    // }
+    //
+    // for (int i = 0; i < length; i++) {
+    //     // If positionWrite >= OPENBCI_BUFFER_LENGTH need to wrap around
+    //     if (currentPacketBufferStreamPacket->positionWrite >= OPENBCI_MAX_PACKET_SIZE_BYTES) {
+    //         // Go to the next packet
+    //         bufferStreamPackets.numberOfPacketsToSend++;
+    //         // Did we run out of buffers?
+    //         if (bufferStreamPackets.numberOfPacketsToSend >= OPENBCI_MAX_NUMBER_OF_BUFFERS) {
+    //             // this is bad, so something, throw error, explode... idk yet...
+    //             //  for now set currentPacketBufferSerial to NULL
+    //             currentPacketBufferStreamPacket = NULL;
+    //         } else {
+    //             // move the pointer 1 struct
+    //             currentPacketBufferStreamPacket++;
+    //         }
+    //     }
+    //     // We are only going to mess with the current packet if it's not null
+    //     if (currentPacketBufferStreamPacket) {
+    //         // Store the byte to current buffer at write postition
+    //         currentPacketBufferStreamPacket->data[currentPacketBufferStreamPacket->positionWrite] = data[i];
+    //
+    //         // Increment currentPacketBufferSerial write postion
+    //         currentPacketBufferStreamPacket->positionWrite++;
+    //     }
+    // }
 }
 
 /**
@@ -1735,12 +1755,12 @@ boolean OpenBCI_Radios_Class::processHostRadioCharData(device_t device, volatile
         // We don't actually read to serial port yet, we simply move it
         //  into a buffer in an effort to not write to the Serial port
         //  from an ISR.
-        Serial.write(0xA0);
-        for (int i = 1; i < len; i++) {
-            Serial.write(data[i]);
-        }
-        Serial.write(outputGetStopByteFromByteId(data[0]));
-        // bufferAddStreamPacket(data,len);
+        // Serial.write(0xA0);
+        // for (int i = 1; i < len; i++) {
+        //     Serial.write(data[i]);
+        // }
+        // Serial.write(outputGetStopByteFromByteId(data[0]));
+        bufferAddStreamPacket(data,len);
         // Check to see if there is a packet to send back
         return hostPacketToSend();
     }

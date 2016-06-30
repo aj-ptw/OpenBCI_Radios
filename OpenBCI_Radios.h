@@ -163,11 +163,17 @@ public:
     volatile boolean isWaitingForNewPollTimeConfirmation;
     boolean verbosePrintouts;
 
-    char    singleCharMsg[1];
+    char singleCharMsg[1];
+    char ringBuffer[512];
+    int ringBufferRead;
+    int ringBufferWrite;
+    volatile boolean streamPacketFlag;
 
     volatile boolean packetInTXRadioBuffer;
 
     volatile int lastPacketSent;
+
+
 
     volatile PacketBuffer *currentPacketBufferSerial;
     volatile PacketBuffer *currentPacketBufferStreamPacket;
