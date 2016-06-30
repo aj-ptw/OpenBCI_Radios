@@ -34,6 +34,7 @@ public:
         STREAM_STATE_READY,
         STREAM_STATE_TAIL
     };
+
     // STRUCTS
     typedef struct {
       char  data[OPENBCI_MAX_PACKET_SIZE_BYTES];
@@ -120,8 +121,9 @@ public:
     char        processChar(char newChar);
     void        processCommsFailure(void);
     void        processCommsFailureSinglePacket(void);
-    boolean     processDeviceRadioCharData(volatile char *data, int len);
+    boolean     processDeviceRadioCharData(char *data, int len);
     boolean     processHostRadioCharData(device_t device, volatile char *data, int len);
+    void        processInboundDeviceBuffer(char *,int);
     byte        processOutboundBuffer(volatile PacketBuffer *currentPacketBuffer);
     byte        processOutboundBufferCharDouble(volatile char *buffer);
     byte        processOutboundBufferCharSingle(char aChar);
@@ -136,7 +138,6 @@ public:
     void        sendRadioMessageToHost(byte msg);
     void        sendStreamPackets(void);
     boolean     sendStreamPacketToTheHost(void);
-    void        sendTheDevicesFirstPacketToTheHost(void);
     void        setByteIdForPacketBuffer(int packetNumber);
     boolean     setChannelNumber(uint32_t channelNumber);
     boolean     setPollTime(uint32_t pollTime);
@@ -161,11 +162,12 @@ public:
     volatile boolean isWaitingForNewChannelNumberConfirmation;
     volatile boolean isWaitingForNewPollTime;
     volatile boolean isWaitingForNewPollTimeConfirmation;
+    volatile boolean packetInTXRadioBuffer;
     boolean verbosePrintouts;
 
     char    singleCharMsg[1];
 
-    volatile boolean packetInTXRadioBuffer;
+    volatile uint8_t deviceState;
 
     volatile int lastPacketSent;
 

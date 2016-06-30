@@ -34,6 +34,9 @@ void loop() {
         // Clear the stream packet buffer
         radio.bufferResetStreamPacketBuffer();
 
+        // Set back to a normal state
+        radio.deviceState = DEVICE_STATE_NORMAL;
+
         // Send reset message to the board
         radio.resetPic32();
 
@@ -51,23 +54,19 @@ void loop() {
             char newChar = Serial.read();
             // Mark the last serial as now;
             radio.lastTimeSerialRead = micros();
-            // Get one char and process it
-            radio.processChar(newChar);
+            // Stateful decisions here
+            if (radio.deviceState) {
+                // Process it
+                radio.processChar(newChar);
+            } else { // Device state must be streaming
+                // Always store to serial buffer
+                radio.storeCharToSerialBuffer(newChar);
+            }
             // Reset the poll timer to prevent contacting the host mid read
             radio.pollRefresh();
         }
 
-        if (radio.isAStreamPacketWaitingForLaunch()) { // Is there a stream packet waiting to get sent to the Host?
-            // Has 80uS passed since the last time we read from the serial port?
-            if (micros() > (radio.lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_STREAM_uS)) {
-                if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    radio.sendStreamPacketToTheHost();
-                } else {
-                    // packet loss incur
-                }
-
-            }
-        } else if (radio.thereIsDataInSerialBuffer()) { // Is there data from the Pic waiting to get sent to Host
+        if (radio.thereIsDataInSerialBuffer()) { // Is there data from the Pic waiting to get sent to Host
             // Has 3ms passed since the last time the serial port was read. Only the
             //  first packet get's sent from here
             if ((micros() > (radio.lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_NRML_uS)) && radio.bufferSerial.numberOfPacketsSent == 0){
@@ -77,7 +76,7 @@ void loop() {
                     radio.sendPacketToHost();
                     radio.ackCounter++;
                 } else {
-                    Serial.println("Err: dropping packet");
+                    // Serial.println("Err: dropping packet");
                 }
 
             }

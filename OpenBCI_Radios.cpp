@@ -24,6 +24,7 @@ MIT license
 OpenBCI_Radios_Class::OpenBCI_Radios_Class() {
     // Set defaults
     radioMode = OPENBCI_MODE_DEVICE; // Device mode
+    deviceState = DEVICE_STATE_NORMAL;
     radioChannel = 25; // Channel 18
     verbosePrintouts = false;
     debugMode = false; // Set true if doing dongle-dongle sim
@@ -769,42 +770,6 @@ void OpenBCI_Radios_Class::sendRadioMessageToHost(byte msg) {
     RFduinoGZLL.sendToHost((const char*)msg,1);
 }
 
-/**
-* @description Private function to take data from the serial port and send it
-*                 to the HOST
-* @author AJ Keller (@pushtheworldllc)
-*/
-void OpenBCI_Radios_Class::sendTheDevicesFirstPacketToTheHost(void) {
-    // Is there data in bufferSerial?
-    if (bufferSerial.numberOfPacketsToSend > 0 && bufferSerial.numberOfPacketsSent == 0) {
-        // Get the packet number or type, based on streaming or not
-        int packetNumber = bufferSerial.numberOfPacketsToSend - 1;
-
-        char byteId = byteIdMake(false,packetNumber,bufferSerial.packetBuffer->data + 1, bufferSerial.packetBuffer->positionWrite - 1);
-
-        // Add the byteId to the packet
-        bufferSerial.packetBuffer->data[0] = byteId;
-
-        // // TODO: REMOVE THIS SHIT!
-        // if (bufferSerial.packetBuffer->data[1] == 0x00) {
-        //     Serial.write(getChannelNumber());
-        // }
-        // Send back some data
-        RFduinoGZLL.sendToHost((char *)bufferSerial.packetBuffer->data, bufferSerial.packetBuffer->positionWrite);
-
-        // We know we just sent the first packet
-        bufferSerial.numberOfPacketsSent = 1;
-
-        pollRefresh();
-
-        if (verbosePrintouts) {
-            Serial.print("Si->"); Serial.print(packetNumber); Serial.print(":"); Serial.println(bufferSerial.packetBuffer->positionWrite);
-        }
-
-        bufferResetStreamPacketBuffer();
-    }
-}
-
 void OpenBCI_Radios_Class::setByteIdForPacketBuffer(int packetNumber) {
     char byteId = byteIdMake(false,packetNumber,(bufferSerial.packetBuffer + bufferSerial.numberOfPacketsSent)->data + 1, (bufferSerial.packetBuffer + bufferSerial.numberOfPacketsSent)->positionWrite - 1);
 
@@ -859,40 +824,8 @@ boolean OpenBCI_Radios_Class::isATailByteChar(char newChar) {
  * @param {char} - The char that was read in
  */
 char OpenBCI_Radios_Class::processChar(char newChar) {
-    // Always store to serial buffer
-    boolean success = storeCharToSerialBuffer(newChar);
-    // Verify we have not over flowed
-    if (!success) return newChar;
-
     // Process the new char
     switch (curStreamState) {
-        case STREAM_STATE_TAIL:
-            // Is the current char equal to 0xCX where X is 0-F?
-            if (isATailByteChar(newChar)) {
-                // Set the type byte
-                streamPacketBuffer.typeByte = newChar;
-                // Change the state to ready
-                curStreamState = STREAM_STATE_READY;
-                // Serial.println("SSR");
-            } else {
-                // Reset the state machine
-                curStreamState = STREAM_STATE_INIT;
-                // Serial.println("SSI");
-                // Set bytes in to 0
-                streamPacketBuffer.bytesIn = 0;
-                // Test to see if this byte is a head byte, maybe if it's not a
-                //  tail byte then that's because a byte was dropped on the way
-                //  over from the Pic.
-                if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
-                    // Move the state
-                    curStreamState = STREAM_STATE_STORING;
-                    // Store to the streamPacketBuffer
-                    streamPacketBuffer.data[0] = newChar;
-                    // Set to 1
-                    streamPacketBuffer.bytesIn = 1;
-                }
-            }
-            break;
         case STREAM_STATE_STORING:
             // Store to the stream packet buffer
             streamPacketBuffer.data[streamPacketBuffer.bytesIn] = newChar;
@@ -900,31 +833,23 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
             streamPacketBuffer.bytesIn++;
 
             if (streamPacketBuffer.bytesIn == 32) {
-                curStreamState = STREAM_STATE_TAIL;
-                // Serial.println("SST");
+                // Send the packet
+                if (ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
+                    sendStreamPacketToTheHost();
+                    ackCounter++;
+                } else {
+                    // Serial.println("Err: dropping packet");
+                }
+
             }
-
-            break;
-        // We have called the function before we were able to send the stream
-        //  packet which means this is not a stream packet, it's part of a
-        //  bigger message
-        case STREAM_STATE_READY:
-            // Got a 34th byte, go back to start
-            curStreamState = STREAM_STATE_INIT;
-            // Serial.println("SSI");
-            // Set bytes in to 0
-            streamPacketBuffer.bytesIn = 0;
-
             break;
         case STREAM_STATE_INIT:
-            if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
-                // Move the state
-                curStreamState = STREAM_STATE_STORING;
-                // Store to the streamPacketBuffer
-                streamPacketBuffer.data[0] = newChar;
-                // Set to 1
-                streamPacketBuffer.bytesIn = 1;
-            }
+            // Move the state
+            curStreamState = STREAM_STATE_STORING;
+            // Store to the streamPacketBuffer
+            streamPacketBuffer.data[0] = newChar;
+            // Set to 2 so we skip the
+            streamPacketBuffer.bytesIn = 1;
             break;
         default:
             // Reset the state
@@ -932,6 +857,29 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
 
     }
     return newChar;
+}
+
+/**
+ * @description Used by the device to spy on the incoming buffer to determine if
+ *  the device should enter or leave a streaming state.
+ * @param data {char *} - The buffer to parse
+ * @param len {int} - The length of the buffer
+ */
+void OpenBCI_Radios_Class::processInboundDeviceBuffer(char *data, int len) {
+    // TODO: see if we can remove this
+    if (len > 2) return;
+    for (int i = 0; i < len; i++) {
+        switch (data[i]) {
+            case OPENBCI_DEVICE_STREAM_START:
+                deviceState = DEVICE_STATE_STREAMING;
+                break;
+            case OPENBCI_DEVICE_STREAM_STOP:
+                deviceState = DEVICE_STATE_NORMAL;
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 /**
@@ -947,10 +895,9 @@ void OpenBCI_Radios_Class::resetPic32(void) {
  * @return {boolean} true when the packet has been sent
  * @author AJ Keller (@pushtheworldllc)
  */
-boolean OpenBCI_Radios_Class::sendStreamPacketToTheHost(void) {
+boolean OpenBCI_Radios_Class::sendStreamPacketToTheHost() {
 
     byte packetType = byteIdMakeStreamPacketType();
-    // Serial.print("Packet type: "); Serial.println(packetType);
 
     char byteId = byteIdMake(true,packetType,streamPacketBuffer.data + 1, OPENBCI_MAX_DATA_BYTES_IN_PACKET); // 31 bytes
 
@@ -1325,10 +1272,10 @@ char OpenBCI_Radios_Class::byteIdMake(boolean isStreamPacket, int packetNumber, 
 
 /**
 * @description Strips and gets the packet number from a byteId
-* @returns [byte] the packet type
+* @returns {byte} the packet type
 */
 byte OpenBCI_Radios_Class::byteIdMakeStreamPacketType(void) {
-    return (byte)(streamPacketBuffer.typeByte & 0x0F);
+    return (byte)(streamPacketBuffer.data[0] & 0x0F);
 }
 
 /**
@@ -1603,7 +1550,7 @@ boolean OpenBCI_Radios_Class::packetToSend(void) {
     return false;
 }
 
-boolean OpenBCI_Radios_Class::processDeviceRadioCharData(volatile char *data, int len) {
+boolean OpenBCI_Radios_Class::processDeviceRadioCharData(char *data, int len) {
     // We enter this if statement if we got a packet with length greater than
     //  1. If we recieve a packet with packetNumber equal to 0, then we can set
     //  a flag to write the radio buffer.
@@ -1636,6 +1583,9 @@ boolean OpenBCI_Radios_Class::processDeviceRadioCharData(volatile char *data, in
         gotLastPacket = true;
         // Mark this as the first packet
         firstPacket = true;
+        // Send this packet in for processing in case we need to enter into a
+        //  streaming state
+        processInboundDeviceBuffer(data,len);
 
     // If you are getting a packet that has the same packet number, check to
     //  make sure we are not getting the same
@@ -1735,12 +1685,12 @@ boolean OpenBCI_Radios_Class::processHostRadioCharData(device_t device, volatile
         // We don't actually read to serial port yet, we simply move it
         //  into a buffer in an effort to not write to the Serial port
         //  from an ISR.
-        Serial.write(0xA0);
-        for (int i = 1; i < len; i++) {
-            Serial.write(data[i]);
-        }
-        Serial.write(outputGetStopByteFromByteId(data[0]));
-        // bufferAddStreamPacket(data,len);
+        // Serial.write(0xA0);
+        // for (int i = 1; i < len; i++) {
+        //     Serial.write(data[i]);
+        // }
+        // Serial.write(outputGetStopByteFromByteId(data[0]));
+        bufferAddStreamPacket(data,len);
         // Check to see if there is a packet to send back
         return hostPacketToSend();
     }

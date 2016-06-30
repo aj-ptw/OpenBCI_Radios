@@ -94,6 +94,13 @@
 #define OPENBCI_HOST_POLL_TIME_GET 0xF3 // TODO: Implement
 #define OPENBCI_HOST_POLL_TIME_SET 0xF4
 
+// Special device codes
+#define OPENBCI_DEVICE_STREAM_START 'b'
+#define OPENBCI_DEVICE_STREAM_STOP 's'
+
+#define DEVICE_STATE_NORMAL 0
+#define DEVICE_STATE_STREAMING 1
+
 // Raw data packet types/codes
 #define OPENBCI_PACKET_TYPE_RAW_AUX      = 3; // 0011
 #define OPENBCI_PACKET_TYPE_STANDARD     = 0; // 0000
