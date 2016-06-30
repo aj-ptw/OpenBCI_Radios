@@ -24,7 +24,7 @@ MIT license
 OpenBCI_Radios_Class::OpenBCI_Radios_Class() {
     // Set defaults
     radioMode = OPENBCI_MODE_DEVICE; // Device mode
-    deviceState = DEVICE_STATE_NORMAL;
+    deviceState = 0;
     radioChannel = 25; // Channel 18
     verbosePrintouts = false;
     debugMode = false; // Set true if doing dongle-dongle sim
@@ -813,7 +813,7 @@ boolean OpenBCI_Radios_Class::isAStreamPacketWaitingForLaunch(void) {
 /**
  * @description Test to see if a char follows the stream tail byte format
  */
-boolean OpenBCI_Radios_Class::isATailByteChar(char newChar) {
+boolean OpenBCI_Radios_Class::isAHeadByteChar(char newChar) {
     return (newChar >> 4) == 0xC;
 }
 
@@ -834,22 +834,19 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
 
             if (streamPacketBuffer.bytesIn == 32) {
                 // Send the packet
-                if (ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    sendStreamPacketToTheHost();
-                    ackCounter++;
-                } else {
-                    // Serial.println("Err: dropping packet");
-                }
-
+                sendStreamPacketToTheHost();
+                ackCounter++;
             }
             break;
         case STREAM_STATE_INIT:
-            // Move the state
-            curStreamState = STREAM_STATE_STORING;
-            // Store to the streamPacketBuffer
-            streamPacketBuffer.data[0] = newChar;
-            // Set to 2 so we skip the
-            streamPacketBuffer.bytesIn = 1;
+            if(isAHeadByteChar(newChar)) {
+                // Move the state
+                curStreamState = STREAM_STATE_STORING;
+                // Store to the streamPacketBuffer
+                streamPacketBuffer.data[0] = newChar;
+                // Set to 2 so we skip the
+                streamPacketBuffer.bytesIn = 1;
+            }
             break;
         default:
             // Reset the state
@@ -867,19 +864,20 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
  */
 void OpenBCI_Radios_Class::processInboundDeviceBuffer(char *data, int len) {
     // TODO: see if we can remove this
-    if (len > 2) return;
-    for (int i = 0; i < len; i++) {
-        switch (data[i]) {
-            case OPENBCI_DEVICE_STREAM_START:
-                deviceState = DEVICE_STATE_STREAMING;
-                break;
-            case OPENBCI_DEVICE_STREAM_STOP:
-                deviceState = DEVICE_STATE_NORMAL;
-                break;
-            default:
-                break;
-        }
+    switch (data[1]) {
+        case OPENBCI_DEVICE_STREAM_START:
+            deviceState = 1;
+            break;
+        case OPENBCI_DEVICE_STREAM_STOP:
+            deviceState = 0;
+            break;
+        default:
+            break;
     }
+    // if (len > 2) return;
+    // for (int i = 0; i < len; i++) {
+    //
+    // }
 }
 
 /**
@@ -905,7 +903,7 @@ boolean OpenBCI_Radios_Class::sendStreamPacketToTheHost() {
     streamPacketBuffer.data[0] = byteId;
 
     // Clean the serial buffer (because these bytes got added to it too)
-    bufferCleanSerial(bufferSerial.numberOfPacketsToSend);
+    // bufferCleanSerial(bufferSerial.numberOfPacketsToSend);
     // Serial.println("#c4\n");
 
     // Clean the stream packet buffer

@@ -21,9 +21,34 @@ void setup() {
     //  set on init flash. MAKE SURE THIS CHANNEL NUMBER MATCHES THE HOST!
     radio.begin(OPENBCI_MODE_DEVICE,20);
 }
-
+unsigned long lastAckTime = 0;
 void loop() {
-
+    if (lastAckTime > 0) {
+        if (millis() > (lastAckTime + 1000)) {
+            radio.pollNow();
+        }
+    }
+    if (radio.deviceState = 1) {
+        if (Serial.available()) {
+            char newChar = Serial.read();
+            // Mark the last serial as now;
+            radio.lastTimeSerialRead = micros();
+            // Process it
+            radio.processChar(newChar);
+            // Reset the poll timer to prevent contacting the host mid read
+            radio.pollRefresh();
+        }
+    } else {
+        if (Serial.available()) { // Is there new serial data available?
+            char newChar = Serial.read();
+            // Mark the last serial as now;
+            radio.lastTimeSerialRead = micros();
+            // Always store to serial buffer
+            radio.storeCharToSerialBuffer(newChar);
+            // Reset the poll timer to prevent contacting the host mid read
+            radio.pollRefresh();
+        }
+    }
     // First we must ask if an emergency stop flag has been triggered, as a Device
     //  we must frequently ask this question as we are the only one that can
     //  initiaite a communication between back to the Driver.
@@ -49,54 +74,37 @@ void loop() {
 
         radio.bufferSerial.overflowed = false;
 
-    } else {
-        if (Serial.available()) { // Is there new serial data available?
-            char newChar = Serial.read();
-            // Mark the last serial as now;
-            radio.lastTimeSerialRead = micros();
-            // Stateful decisions here
-            if (radio.deviceState) {
-                // Process it
-                radio.processChar(newChar);
-            } else { // Device state must be streaming
-                // Always store to serial buffer
-                radio.storeCharToSerialBuffer(newChar);
-            }
-            // Reset the poll timer to prevent contacting the host mid read
-            radio.pollRefresh();
-        }
+    }
 
-        if (radio.thereIsDataInSerialBuffer()) { // Is there data from the Pic waiting to get sent to Host
-            // Has 3ms passed since the last time the serial port was read. Only the
-            //  first packet get's sent from here
-            if ((micros() > (radio.lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_NRML_uS)) && radio.bufferSerial.numberOfPacketsSent == 0){
-                // In order to do checksumming we must only send one packet at a time
-                //  this stands as the first time we are going to send a packet!
-                if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    radio.sendPacketToHost();
-                    radio.ackCounter++;
-                } else {
-                    // Serial.println("Err: dropping packet");
-                }
-
+    if (radio.thereIsDataInSerialBuffer()) { // Is there data from the Pic waiting to get sent to Host
+        // Has 3ms passed since the last time the serial port was read. Only the
+        //  first packet get's sent from here
+        if ((micros() > (radio.lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_NRML_uS)) && radio.bufferSerial.numberOfPacketsSent == 0){
+            // In order to do checksumming we must only send one packet at a time
+            //  this stands as the first time we are going to send a packet!
+            if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
+                radio.sendPacketToHost();
+                radio.ackCounter++;
+            } else {
+                // Serial.println("Err: dropping packet");
             }
         }
+    }
 
-        if (radio.gotAllRadioPackets) { // Did we recieve all packets in a potential multi packet transmission
-            // Flush radio buffer to the driver
-            radio.bufferRadioFlush();
-            // Reset the radio buffer flags
-            radio.bufferRadioReset();
-            // Clean the buffer.. fill with zeros
-            radio.bufferRadioClean();
-        }
+    if (radio.gotAllRadioPackets) { // Did we recieve all packets in a potential multi packet transmission
+        // Flush radio buffer to the driver
+        radio.bufferRadioFlush();
+        // Reset the radio buffer flags
+        radio.bufferRadioReset();
+        // Clean the buffer.. fill with zeros
+        radio.bufferRadioClean();
+    }
 
-        if (millis() > (radio.timeOfLastPoll + radio.pollTime)) {  // Has more than the poll time passed?
-            // Refresh the poll timer
-            radio.pollRefresh();
-            // Poll the host
-            radio.sendPollMessageToHost();
-        }
+    if (millis() > (radio.timeOfLastPoll + radio.pollTime)) {  // Has more than the poll time passed?
+        // Refresh the poll timer
+        radio.pollRefresh();
+        // Poll the host
+        radio.sendPollMessageToHost();
     }
 }
 
@@ -111,6 +119,7 @@ void loop() {
  * @param len {int} - The length of the `data` packet
  */
 void RFduinoGZLL_onReceive(device_t device, int rssi, char *data, int len) {
+    lastAckTime = millis();
     // packet counter
     if (radio.ackCounter > 0) {
         radio.ackCounter--;

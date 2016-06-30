@@ -101,7 +101,7 @@ public:
     boolean     hasStreamPacket(void);
     boolean     hostPacketToSend(void);
     boolean     isAStreamPacketWaitingForLaunch(void);
-    boolean     isATailByteChar(char newChar);
+    boolean     isAHeadByteChar(char newChar);
     void        ledFeedBackForPassThru(void);
     boolean     needToSetChannelNumber(void);
     boolean     needToSetPollTime(void);
@@ -167,7 +167,7 @@ public:
 
     char    singleCharMsg[1];
 
-    volatile uint8_t deviceState;
+    uint8_t deviceState;
 
     volatile int lastPacketSent;
 
