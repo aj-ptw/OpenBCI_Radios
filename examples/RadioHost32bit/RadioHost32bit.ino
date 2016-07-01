@@ -38,17 +38,14 @@ void setup() {
 
 void loop() {
 
-    // Is there a stream packet waiting to get sent to the PC
-
-    while (radio.streamPacketFlag) {
+    // Is there a stream data waiting to get sent to the PC
+    while (radio.ringBufferNumBytes > 0) {
         Serial.write(radio.ringBuffer[radio.ringBufferRead]);
         radio.ringBufferRead++;
-        if (radio.ringBufferRead >= 512) {
+        if (radio.ringBufferRead >= OPENBCI_BUFFER_LENGTH) {
             radio.ringBufferRead = 0;
         }
-        if (radio.ringBufferRead == radio.ringBufferWrite) {
-            radio.streamPacketFlag = false;
-        }
+        radio.ringBufferNumBytes--;
     }
 
     // Is there data in the radio buffer ready to be sent to the Driver?

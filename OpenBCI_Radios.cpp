@@ -25,7 +25,7 @@ OpenBCI_Radios_Class::OpenBCI_Radios_Class() {
     // Set defaults
     radioMode = OPENBCI_MODE_DEVICE; // Device mode
     radioChannel = 25; // Channel 18
-    verbosePrintouts = false;
+    verbosePrintouts = true;
     debugMode = false; // Set true if doing dongle-dongle sim
     isHost = false;
     isDevice = false;
@@ -195,7 +195,7 @@ void OpenBCI_Radios_Class::configureHost(void) {
 
     ringBufferRead = 0;
     ringBufferWrite = 0;
-    streamPacketFlag = false;
+    ringBufferNumBytes = 0;
 
     bufferCleanStreamPackets(OPENBCI_MAX_NUMBER_OF_BUFFERS);
 
@@ -408,15 +408,6 @@ boolean OpenBCI_Radios_Class::commsFailureTimeout(void) {
     } else {
         return false;
     }
-}
-
-/**
- * @description If the Host received a stream packet, then this will have data in it
- *      and number of packets to send will be greater than 0
- * @return {boolean} - If there are packets to send
- */
-boolean OpenBCI_Radios_Class::hasStreamPacket(void) {
-    return streamPacketFlag;
 }
 
 /**
@@ -1079,17 +1070,17 @@ void OpenBCI_Radios_Class::bufferAddStreamPacket(volatile char *data, int length
     ringBufferWrite++;
     int count = 1;
     while (count < length) {
-        if (ringBufferWrite >= 512) {
+        if (ringBufferWrite >= OPENBCI_BUFFER_LENGTH) {
             ringBufferWrite = 0;
         }
         ringBuffer[ringBufferWrite] = data[count];
         ringBufferWrite++;
         count++;
     }
-
     ringBuffer[ringBufferWrite] = outputGetStopByteFromByteId(data[0]);
     ringBufferWrite++;
-    streamPacketFlag = true;
+
+    ringBufferNumBytes += OPENBCI_MAX_PACKET_SIZE_STREAM_BYTES;
 
     // // Set the number of packets to 1 initally, it will only grow
     // if (bufferStreamPackets.numberOfPacketsToSend == 0) {

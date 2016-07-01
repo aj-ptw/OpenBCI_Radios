@@ -97,7 +97,6 @@ public:
     uint32_t    getChannelNumber(void);
     // void        getSerialDataFromPCAndPutItInHostsSerialBuffer(void);
     uint32_t    getPollTime(void);
-    boolean     hasStreamPacket(void);
     boolean     hostPacketToSend(void);
     boolean     isAStreamPacketWaitingForLaunch(void);
     boolean     isATailByteChar(char newChar);
@@ -164,10 +163,10 @@ public:
     boolean verbosePrintouts;
 
     char singleCharMsg[1];
-    char ringBuffer[512];
+    volatile char ringBuffer[OPENBCI_BUFFER_LENGTH];
     int ringBufferRead;
-    int ringBufferWrite;
-    volatile boolean streamPacketFlag;
+    volatile int ringBufferWrite;
+    volatile int ringBufferNumBytes;
 
     volatile boolean packetInTXRadioBuffer;
 
