@@ -944,31 +944,25 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
     // Process the new char
     switch (curStreamState) {
         case STREAM_STATE_TAIL:
+            // Serial.print("t-"); Serial.print(streamPacketBuffer.bytesIn); Serial.print("-"); Serial.println((int)newChar);
             // Is the current char equal to 0xCX where X is 0-F?
             if (isATailByteChar(newChar)) {
+                // Serial.println("G");
                 // Set the type byte
                 streamPacketBuffer.typeByte = newChar;
                 // Change the state to ready
                 curStreamState = STREAM_STATE_READY;
             } else {
-                // Reset the state machine
-                curStreamState = STREAM_STATE_INIT;
-                // Set bytes in to 0
-                streamPacketBuffer.bytesIn = 0;
-                // Test to see if this byte is a head byte, maybe if it's not a
-                //  tail byte then that's because a byte was dropped on the way
-                //  over from the Pic.
-                if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
-                    // Move the state
-                    curStreamState = STREAM_STATE_STORING;
-                    // Store to the streamPacketBuffer
-                    streamPacketBuffer.data[0] = newChar;
-                    // Set to 1
-                    streamPacketBuffer.bytesIn = 1;
-                }
+                // Serial.println("B");
+                curStreamState = STREAM_STATE_STORING;
+                // Store to the streamPacketBuffer
+                streamPacketBuffer.data[1] = newChar;
+                // Set to 1
+                streamPacketBuffer.bytesIn = 2;
             }
             break;
         case STREAM_STATE_STORING:
+            // Serial.print("s-"); Serial.print(streamPacketBuffer.bytesIn); Serial.print("-"); Serial.println((int)newChar);
             // Store to the stream packet buffer
             streamPacketBuffer.data[streamPacketBuffer.bytesIn] = newChar;
             // Increment the number of bytes read in
@@ -976,36 +970,31 @@ char OpenBCI_Radios_Class::processChar(char newChar) {
 
             if (streamPacketBuffer.bytesIn == 32) {
                 curStreamState = STREAM_STATE_TAIL;
-                // Serial.println("SST");
             }
-
             break;
         // We have called the function before we were able to send the stream
         //  packet which means this is not a stream packet, it's part of a
         //  bigger message
         case STREAM_STATE_READY:
+            // Serial.print("r-"); Serial.print(streamPacketBuffer.bytesIn); Serial.print("-"); Serial.println((int)newChar);
             // Got a 34th byte, go back to start
             curStreamState = STREAM_STATE_INIT;
-            // Serial.println("SSI");
             // Set bytes in to 0
-            streamPacketBuffer.bytesIn = 0;
-
+            streamPacketBuffer.bytesIn = 1;
             break;
         case STREAM_STATE_INIT:
-            if (newChar == OPENBCI_STREAM_PACKET_HEAD) {
-                // Move the state
-                curStreamState = STREAM_STATE_STORING;
-                // Store to the streamPacketBuffer
-                streamPacketBuffer.data[0] = newChar;
-                // Set to 1
-                streamPacketBuffer.bytesIn = 1;
-            }
+            // Serial.print("i-"); Serial.print(streamPacketBuffer.bytesIn); Serial.print("-"); Serial.println((int)newChar);
+            // Move the state
+            curStreamState = STREAM_STATE_STORING;
+            // Store to the streamPacketBuffer
+            streamPacketBuffer.data[streamPacketBuffer.bytesIn] = newChar;
+            // Set to 1
+            streamPacketBuffer.bytesIn = 2;
             break;
         default:
             // Reset the state
             curStreamState = STREAM_STATE_INIT;
             break;
-
     }
     return newChar;
 }
@@ -1327,7 +1316,7 @@ void OpenBCI_Radios_Class::bufferRadioReset(void) {
  * @description Resets the stream packet buffer to default settings
  */
 void OpenBCI_Radios_Class::bufferResetStreamPacketBuffer(void) {
-    streamPacketBuffer.bytesIn = 0;
+    streamPacketBuffer.bytesIn = 1;
     curStreamState = STREAM_STATE_INIT;
 }
 
