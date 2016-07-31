@@ -56,7 +56,7 @@ void testByteIdMake() {
     byteId = radio.byteIdMake(false,9,NULL,0);
     test.assertEqualChar(byteId,(char)0x48,"Can set packet number of 9 in byteId");
 
-    radio.bufferCleanSerial(12);
+    radio.bufferSerialReset(12);
 
     for (int i = 0; i < OPENBCI_MAX_DATA_BYTES_IN_PACKET; i++) {
         radio.bufferSerial.packetBuffer->data[i] = 0;
@@ -937,13 +937,13 @@ void testBufferStreamReset() {
     radio.streamPacketBuffer->flushing = true;
     radio.streamPacketBuffer->bytesIn = 32;
     radio.streamPacketBuffer->typeByte = 2;
-    radio.curStreamState = radio.STREAM_STATE_READY;
+    radio.streamPacketBuffer->state = radio.STREAM_STATE_READY;
 
     radio.bufferStreamReset();
     test.assertBoolean(radio.streamPacketBuffer->flushing,false,"should set flushing to false",__LINE__);
     test.assertEqualInt(radio.streamPacketBuffer->bytesIn,0,"should set bytesIn to 0",__LINE__);
     test.assertEqualInt(radio.streamPacketBuffer->typeByte,0,"should set typeByte to 0",__LINE__);
-    test.assertEqualByte(radio.curStreamState, radio.STREAM_STATE_INIT, "should set stream state back to init",__LINE__);
+    test.assertEqualByte(radio.streamPacketBuffer->state, radio.STREAM_STATE_INIT, "should set stream state back to init",__LINE__);
 
     test.it("should be able to reset the second stream buffer");
     (radio.streamPacketBuffer + 1)->flushing = true;
