@@ -50,24 +50,23 @@ public:
     };
     // STRUCTS
     typedef struct {
-      char      data[OPENBCI_MAX_PACKET_SIZE_BYTES];
-      uint8_t   positionRead;
-      uint8_t   positionWrite;
+      char  data[OPENBCI_MAX_PACKET_SIZE_BYTES];
+      int   positionRead;
+      int   positionWrite;
     } PacketBuffer;
 
     typedef struct {
         boolean         overflowed;
-        uint8_t         numberOfPacketsToSend;
-        uint8_t         numberOfPacketsSent;
+        int             numberOfPacketsToSend;
+        int             numberOfPacketsSent;
         PacketBuffer    packetBuffer[OPENBCI_MAX_NUMBER_OF_BUFFERS];
     } Buffer;
 
     typedef struct {
-        uint8_t         typeByte;
-        char            data[OPENBCI_MAX_PACKET_SIZE_BYTES];
-        uint8_t         bytesIn;
-        boolean         flushing;
-        STREAM_STATE    state;
+        char        typeByte;
+        char        data[OPENBCI_MAX_PACKET_SIZE_BYTES];
+        int         bytesIn;
+        boolean     flushing;
     } StreamPacketBuffer;
 
     typedef struct {
@@ -83,12 +82,18 @@ public:
     void        begin(uint8_t);
     void        begin(uint8_t, uint32_t);
     void        beginDebug(uint8_t, uint32_t);
+    boolean     byteIdGetIsStream(char);
+    int         byteIdGetPacketNumber(char);
+    byte        byteIdGetStreamPacketType(char);
+    // void        bufferAddStreamPacket(StreamPacketBuffer *buf);
     void        bufferAddTimeSyncSentAck(void);
-    void        bufferCleanChar(char *, int);
-    void        bufferCleanCompleteBuffer(Buffer *, int);
-    void        bufferCleanCompletePacketBuffer(PacketBuffer *, int);
-    void        bufferCleanPacketBuffer(PacketBuffer *,int);
-    void        bufferCleanBuffer(Buffer *, int);
+    void        bufferCleanChar(volatile char *, int);
+    void        bufferCleanCompleteBuffer(volatile Buffer *, int);
+    void        bufferCleanCompletePacketBuffer(volatile PacketBuffer *, int);
+    void        bufferCleanPacketBuffer(volatile PacketBuffer *,int);
+    void        bufferCleanBuffer(volatile Buffer *, int);
+    void        bufferCleanSerial(int);
+    void        bufferCleanStreamPackets(int);
     boolean     bufferRadioAddData(BufferRadio *, char *, int, boolean);
     void        bufferRadioClean(BufferRadio *);
     boolean     bufferRadioHasData(BufferRadio *);
@@ -101,26 +106,15 @@ public:
     void        bufferRadioReset(BufferRadio *);
     boolean     bufferRadioSwitchToOtherBuffer(void);
     void        bufferResetStreamPacketBuffer(void);
-    boolean     bufferSerialAddChar(char);
-    boolean     bufferSerialHasData(void);
-    void        bufferSerialReset(uint8_t);
-    boolean     bufferSerialTimeout(void);
-    void        bufferStreamAddChar(StreamPacketBuffer *, char);
     boolean     bufferStreamAddData(char *);
     void        bufferStreamFlush(StreamPacketBuffer *);
     void        bufferStreamFlushBuffers(void);
     boolean     bufferStreamReadyForNewPacket(StreamPacketBuffer *);
-    boolean     bufferStreamReadyToSendToHost(StreamPacketBuffer *buf);
     void        bufferStreamReset(void);
     void        bufferStreamReset(StreamPacketBuffer *);
-    boolean     bufferStreamSendToHost(StreamPacketBuffer *buf);
     void        bufferStreamStoreData(StreamPacketBuffer *, char *);
-    boolean     bufferStreamTimeout(void);
-    boolean     byteIdGetIsStream(uint8_t);
-    int         byteIdGetPacketNumber(uint8_t);
-    byte        byteIdGetStreamPacketType(uint8_t);
-    char        byteIdMake(boolean, uint8_t, char *, uint8_t);
-    byte        byteIdMakeStreamPacketType(uint8_t);
+    char        byteIdMake(boolean, int, volatile char *, int);
+    byte        byteIdMakeStreamPacketType(void);
     boolean     commsFailureTimeout(void);
     void        configure(uint8_t,uint32_t);
     void        configureDevice(void);
@@ -133,7 +127,8 @@ public:
     uint32_t    getPollTime(void);
     boolean     hasStreamPacket(void);
     boolean     hostPacketToSend(void);
-    boolean     isATailByte(uint8_t);
+    boolean     isAStreamPacketWaitingForLaunch(void);
+    boolean     isATailByteChar(char);
     void        ledFeedBackForPassThru(void);
     // void        moveStreamPacketToTempBuffer(volatile char *data);
     boolean     needToSetChannelNumber(void);
@@ -155,6 +150,7 @@ public:
     void        printPollTime(char);
     void        printSuccess(void);
     void        printValidatedCommsTimeout(void);
+    char        processSerialCharDevice(char);
     void        processCommsFailure(void);
     void        processCommsFailureSinglePacket(void);
     boolean     processDeviceRadioCharData(char *, int);
@@ -173,10 +169,14 @@ public:
     void        sendPollMessageToHost(void);
     void        sendRadioMessageToHost(byte);
     void        sendStreamPackets(void);
+    boolean     sendStreamPacketToTheHost(void);
+    void        sendTheDevicesFirstPacketToTheHost(void);
     boolean     serialWriteTimeOut(void);
     void        setByteIdForPacketBuffer(int);
     boolean     setChannelNumber(uint32_t);
     boolean     setPollTime(uint32_t);
+    boolean     storeCharToSerialBuffer(char);
+    boolean     thereIsDataInSerialBuffer(void);
     void        writeBufferToSerial(char *,int);
 
     //////////////////////
@@ -202,7 +202,6 @@ public:
     unsigned long timeOfLastMultipacketSendToHost;
 
     boolean channelNumberSaveAttempted;
-    boolean streamPacketsHaveHeads;
     volatile boolean isWaitingForNewChannelNumberConfirmation;
     volatile boolean isWaitingForNewPollTimeConfirmation;
     volatile boolean sendSerialAck;

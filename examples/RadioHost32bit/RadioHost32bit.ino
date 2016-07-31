@@ -48,7 +48,7 @@ void loop() {
         // Save the last time serial data was read to now
         radio.lastTimeSerialRead = micros();
         // Get data and put it on the serial buffer
-        boolean success = radio.bufferSerialAddChar(newChar);
+        boolean success = radio.storeCharToSerialBuffer(newChar);
         if (!success) {
             Serial.print("Failure: Input too large!$$$");
         }
@@ -160,7 +160,7 @@ void RFduinoGZLL_onReceive(device_t device, int rssi, char *data, int len) {
         sendDataPacket = radio.hostPacketToSend();
         if (sendDataPacket == false) {
             if (radio.bufferSerial.numberOfPacketsSent > 0) {
-                radio.bufferSerialReset(radio.bufferSerial.numberOfPacketsSent);
+                radio.bufferCleanSerial(radio.bufferSerial.numberOfPacketsSent);
             }
         }
     }
