@@ -37,6 +37,8 @@ public:
     typedef enum HOST_MESSAGE {
         HOST_MESSAGE_SERIAL_ACK,
         HOST_MESSAGE_COMMS_DOWN,
+        HOST_MESSAGE_COMMS_DOWN_CHAN,
+        HOST_MESSAGE_COMMS_DOWN_POLL_TIME,
         HOST_MESSAGE_BAUD_FAST,
         HOST_MESSAGE_BAUD_DEFAULT,
         HOST_MESSAGE_SYS_UP,
@@ -59,7 +61,7 @@ public:
         boolean         overflowed;
         uint8_t         numberOfPacketsToSend;
         uint8_t         numberOfPacketsSent;
-        PacketBuffer    packetBuffer[OPENBCI_MAX_NUMBER_OF_BUFFERS];
+        PacketBuffer    packetBuffer[OPENBCI_NUMBER_SERIAL_BUFFERS];
     } Buffer;
 
     typedef struct {
@@ -103,6 +105,7 @@ public:
     void        bufferResetStreamPacketBuffer(void);
     boolean     bufferSerialAddChar(char);
     boolean     bufferSerialHasData(void);
+    void        bufferSerialProcessCommsFailure(void);
     void        bufferSerialReset(uint8_t);
     boolean     bufferSerialTimeout(void);
     void        bufferStreamAddChar(StreamPacketBuffer *, char);
@@ -155,7 +158,6 @@ public:
     void        printPollTime(char);
     void        printSuccess(void);
     void        printValidatedCommsTimeout(void);
-    void        processCommsFailure(void);
     void        processCommsFailureSinglePacket(void);
     boolean     processDeviceRadioCharData(char *, int);
     boolean     processHostRadioCharData(device_t, char *, int);

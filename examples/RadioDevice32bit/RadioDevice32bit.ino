@@ -29,7 +29,7 @@ void loop() {
     //  initiaite a communication between back to the Driver.
     if (radio.bufferSerial.overflowed) {
         // Clear the buffer holding all serial data.
-        radio.bufferSerialReset(OPENBCI_MAX_NUMBER_OF_BUFFERS);
+        radio.bufferSerialReset(OPENBCI_NUMBER_SERIAL_BUFFERS);
 
         // Clear the stream packet buffer
         radio.bufferStreamReset(radio.streamPacketBuffer);
