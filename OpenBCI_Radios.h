@@ -52,9 +52,9 @@ public:
     };
     // STRUCTS
     typedef struct {
-      char      data[OPENBCI_MAX_PACKET_SIZE_BYTES];
-      uint8_t   positionRead;
-      uint8_t   positionWrite;
+        char      data[OPENBCI_MAX_PACKET_SIZE_BYTES];
+        uint8_t   positionRead;
+        uint8_t   positionWrite;
     } PacketBuffer;
 
     typedef struct {
@@ -118,6 +118,8 @@ public:
     void        bufferStreamReset(StreamPacketBuffer *);
     boolean     bufferStreamSendToHost(StreamPacketBuffer *buf);
     void        bufferStreamStoreData(StreamPacketBuffer *, char *);
+    boolean     bufferStreamSwapHead(void);
+    boolean     bufferStreamSwapTail(void);
     boolean     bufferStreamTimeout(void);
     boolean     byteIdGetIsStream(uint8_t);
     int         byteIdGetPacketNumber(uint8_t);
@@ -188,6 +190,8 @@ public:
     BufferRadio bufferRadio[OPENBCI_NUMBER_RADIO_BUFFERS];
     uint8_t currentRadioBufferNum;
     BufferRadio *currentRadioBuffer;
+    uint8_t streamPacketBufferHead;
+    uint8_t streamPacketBufferTail;
     Buffer bufferSerial;
     PacketBuffer *currentPacketBufferSerial;
     // BOOLEANS

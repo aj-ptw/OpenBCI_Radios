@@ -31,8 +31,9 @@ void loop() {
         // Clear the buffer holding all serial data.
         radio.bufferSerialReset(OPENBCI_NUMBER_SERIAL_BUFFERS);
 
-        // Clear the stream packet buffer
-        radio.bufferStreamReset(radio.streamPacketBuffer);
+        // TODO: What do we do with this now?
+        // // Clear the stream packet buffer
+        // radio.bufferStreamReset(radio.streamPacketBuffer);
 
         // Send reset message to the board
         radio.resetPic32();
@@ -47,25 +48,38 @@ void loop() {
         radio.bufferSerial.overflowed = false;
 
     } else {
-        while (Serial.available()) { // Is there new serial data available?
+        if (Serial.available()) { // Is there new serial data available?
             char newChar = Serial.read();
             // Mark the last serial as now;
             radio.lastTimeSerialRead = micros();
             // Store it to serial buffer
             radio.bufferSerialAddChar(newChar);
             // Get one char and process it
-            radio.bufferStreamAddChar(radio.streamPacketBuffer, newChar);
+            radio.bufferStreamAddChar((radio.streamPacketBuffer + radio.streamPacketBufferHead), newChar);
             // Reset the poll timer to prevent contacting the host mid read
             radio.pollRefresh();
         }
 
-        if (radio.bufferStreamReadyToSendToHost(radio.streamPacketBuffer)) { // Is there a stream packet waiting to get sent to the Host?
+        if (radio.bufferStreamReadyToSendToHost(radio.streamPacketBuffer + radio.streamPacketBufferHead)) { // Is there a stream packet waiting to get sent to the Host?
             // Has 80uS passed since the last time we read from the serial port?
             if (radio.bufferStreamTimeout()) {
+
+                // We are sure this is a streaming packet.
+                radio.streamPacketBufferHead++;
+                if (radio.streamPacketBufferHead > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
+                    radio.streamPacketBufferHead = 0;
+                }
+
                 if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    radio.bufferStreamSendToHost(radio.streamPacketBuffer);
-                } else {
-                    // packet loss incur... never seems to happen
+                    radio.ackCounter++;
+                    (radio.streamPacketBuffer + radio.streamPacketBufferTail)->data[31] = radio.ackCounter;
+
+                    radio.bufferStreamSendToHost(radio.streamPacketBuffer + radio.streamPacketBufferTail);
+
+                    radio.streamPacketBufferTail++;
+                    if (radio.streamPacketBufferTail > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
+                        radio.streamPacketBufferTail = 0;
+                    }
                 }
             }
         } else if (radio.bufferSerialHasData()) { // Is there data from the Pic waiting to get sent to Host
@@ -75,8 +89,8 @@ void loop() {
                 // In order to do checksumming we must only send one packet at a time
                 //  this stands as the first time we are going to send a packet!
                 if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    radio.sendPacketToHost();
                     radio.ackCounter++;
+                    radio.sendPacketToHost();
                 } else {
                     // Serial.println("Err: dropping packet");
                 }

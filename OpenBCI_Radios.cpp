@@ -113,6 +113,8 @@ void OpenBCI_Radios_Class::configure(uint8_t mode, uint32_t channelNumber) {
         bufferRadioReset(bufferRadio + 1);
         bufferRadioClean(bufferRadio);
         bufferRadioClean(bufferRadio + 1);
+        streamPacketBufferHead = 0;
+        streamPacketBufferTail = 0;
         currentRadioBuffer = bufferRadio;
         currentRadioBufferNum = 0;
         bufferSerialReset(OPENBCI_NUMBER_SERIAL_BUFFERS);
@@ -1410,6 +1412,37 @@ boolean OpenBCI_Radios_Class::bufferSerialTimeout(void) {
     return micros() > (lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_NRML_uS);
 }
 
+boolean OpenBCI_Radios_Class::bufferStreamSwapHead(void) {
+    if (((streamPacketBuffer + streamPacketBufferHead)->state == STREAM_STATE_STORING) || ((streamPacketBuffer + streamPacketBufferHead)->state == STREAM_STATE_TAIL)) {
+        return false;
+    }
+    for (int i  = 0; i < OPENBCI_NUMBER_STREAM_BUFFERS; i++) {
+        if ((streamPacketBuffer + i)->state == STREAM_STATE_INIT) {
+            streamPacketBufferHead = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+boolean OpenBCI_Radios_Class::bufferStreamSwapTail(void) {
+    if (streamPacketBufferHead == streamPacketBufferTail) {
+        return false;
+    }
+
+    streamPacketBufferTail++;
+
+    if (streamPacketBufferTail == streamPacketBufferHead) {
+        return true;
+    }
+
+    if (streamPacketBufferTail >= OPENBCI_NUMBER_STREAM_BUFFERS) {
+        streamPacketBufferTail = 0;
+    }
+
+    return true;
+}
+
 /**
  * @description Process a char from the serial port on the Device. Enters the char
  *  into the stream state machine.
@@ -1568,7 +1601,6 @@ void OpenBCI_Radios_Class::bufferStreamReset(StreamPacketBuffer *buf) {
 boolean OpenBCI_Radios_Class::bufferStreamSendToHost(StreamPacketBuffer *buf) {
 
     byte packetType = byteIdMakeStreamPacketType(buf->typeByte);
-    // Serial.print("Packet type: "); Serial.println(packetType);
 
     char byteId = byteIdMake(true,packetType,buf->data + 1, OPENBCI_MAX_DATA_BYTES_IN_PACKET); // 31 bytes
 
