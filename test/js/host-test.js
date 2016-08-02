@@ -8,6 +8,7 @@ var ourBoard = new OpenBCIBoard({verbose:true});
 
 var portNames = {
     host: '/dev/tty.usbserial-DB00JAKZ'
+    // host: '/dev/tty.usbserial-DN0096JM'
 }
 
 var badPackets = 0;

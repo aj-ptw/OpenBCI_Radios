@@ -450,6 +450,8 @@ void OpenBCI_Radios_Class::printValidatedCommsTimeout(void) {
  * @param {uint8_t} - The code to print Serial.write()
  *  Possible options:
  *  `HOST_MESSAGE_COMMS_DOWN` - Print the comms down message
+ *  `HOST_MESSAGE_COMMS_DOWN_CHAN` - Print the message when the comms when down trying to change channels.
+ *  `HOST_MESSAGE_COMMS_DOWN_POLL_TIME` - Print the messafe when the comms go down trying to change poll times.
  *  `HOST_MESSAGE_BAUD_FAST` - Baud rate swtiched to 230400
  *  `HOST_MESSAGE_BAUD_DEFAULT` - Baud rate swtiched to 115200
  *  `HOST_MESSAGE_SYS_UP` - Print the system up message
