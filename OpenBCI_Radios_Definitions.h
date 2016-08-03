@@ -58,7 +58,7 @@
 #define RFDUINOGZLL_FLASH_MEM_ADDR 251
 
 // Max number of packets on the TX buffer
-#define RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER 3
+#define RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER 2
 
 // radio errors
 #define ERROR_RADIO_NONE 0x00

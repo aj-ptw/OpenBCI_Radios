@@ -87,6 +87,12 @@ void loop() {
                 // Serial.print("Head: "); Serial.println(radio.streamPacketBufferHead);
 
 
+
+            }
+        }
+
+        if ((radio.streamPacketBuffer + radio.streamPacketBufferTail)->state == radio.STREAM_STATE_READY) { // Is there a stream packet waiting to get sent to the Host?
+            if (radio.streamPacketBufferHead != radio.streamPacketBufferTail) {
                 if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
                     radio.ackCounter++;
                     (radio.streamPacketBuffer + radio.streamPacketBufferTail)->data[31] = radio.ackCounter;
@@ -97,9 +103,11 @@ void loop() {
                     if (radio.streamPacketBufferTail > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
                         radio.streamPacketBufferTail = 0;
                     }
-                }
+                } 
             }
-        } else if (radio.bufferSerialHasData()) { // Is there data from the Pic waiting to get sent to Host
+        }
+
+        if (radio.bufferSerialHasData()) { // Is there data from the Pic waiting to get sent to Host
             // Has 3ms passed since the last time the serial port was read. Only the
             //  first packet get's sent from here
             if (radio.bufferSerialTimeout() && radio.bufferSerial.numberOfPacketsSent == 0 ) {
