@@ -1412,37 +1412,6 @@ boolean OpenBCI_Radios_Class::bufferSerialTimeout(void) {
     return micros() > (lastTimeSerialRead + OPENBCI_TIMEOUT_PACKET_NRML_uS);
 }
 
-boolean OpenBCI_Radios_Class::bufferStreamSwapHead(void) {
-    if (((streamPacketBuffer + streamPacketBufferHead)->state == STREAM_STATE_STORING) || ((streamPacketBuffer + streamPacketBufferHead)->state == STREAM_STATE_TAIL)) {
-        return false;
-    }
-    for (int i  = 0; i < OPENBCI_NUMBER_STREAM_BUFFERS; i++) {
-        if ((streamPacketBuffer + i)->state == STREAM_STATE_INIT) {
-            streamPacketBufferHead = i;
-            return true;
-        }
-    }
-    return false;
-}
-
-boolean OpenBCI_Radios_Class::bufferStreamSwapTail(void) {
-    if (streamPacketBufferHead == streamPacketBufferTail) {
-        return false;
-    }
-
-    streamPacketBufferTail++;
-
-    if (streamPacketBufferTail == streamPacketBufferHead) {
-        return true;
-    }
-
-    if (streamPacketBufferTail >= OPENBCI_NUMBER_STREAM_BUFFERS) {
-        streamPacketBufferTail = 0;
-    }
-
-    return true;
-}
-
 /**
  * @description Process a char from the serial port on the Device. Enters the char
  *  into the stream state machine.
@@ -1460,6 +1429,8 @@ void OpenBCI_Radios_Class::bufferStreamAddChar(StreamPacketBuffer *buf, char new
                 buf->typeByte = newChar;
                 // Change the state to ready
                 buf->state = STREAM_STATE_READY;
+                // Serial.print(33); Serial.print(" state: "); Serial.print("READY-");
+                // Serial.println((streamPacketBuffer + streamPacketBufferHead)->state);
             } else {
                 // Reset the state machine
                 buf->state = STREAM_STATE_INIT;

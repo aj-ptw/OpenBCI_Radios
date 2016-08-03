@@ -31,8 +31,8 @@ public:
     typedef enum STREAM_STATE {
         STREAM_STATE_INIT,
         STREAM_STATE_STORING,
-        STREAM_STATE_READY,
-        STREAM_STATE_TAIL
+        STREAM_STATE_TAIL,
+        STREAM_STATE_READY
     };
     typedef enum HOST_MESSAGE {
         HOST_MESSAGE_SERIAL_ACK,
@@ -118,8 +118,6 @@ public:
     void        bufferStreamReset(StreamPacketBuffer *);
     boolean     bufferStreamSendToHost(StreamPacketBuffer *buf);
     void        bufferStreamStoreData(StreamPacketBuffer *, char *);
-    boolean     bufferStreamSwapHead(void);
-    boolean     bufferStreamSwapTail(void);
     boolean     bufferStreamTimeout(void);
     boolean     byteIdGetIsStream(uint8_t);
     int         byteIdGetPacketNumber(uint8_t);

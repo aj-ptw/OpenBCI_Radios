@@ -29,11 +29,10 @@
 
 // Max buffer lengths
 #define OPENBCI_BUFFER_LENGTH_MULTI 528
-#define OPENBCI_BUFFER_LENGTH_STREAM 330
 
 #define OPENBCI_NUMBER_RADIO_BUFFERS 2
 #define OPENBCI_NUMBER_SERIAL_BUFFERS 16
-#define OPENBCI_NUMBER_STREAM_BUFFERS 3
+#define OPENBCI_NUMBER_STREAM_BUFFERS 10
 
 // These are the three different possible configuration modes for this library
 #define OPENBCI_MODE_DEVICE 0
