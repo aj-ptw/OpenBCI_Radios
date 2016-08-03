@@ -55,21 +55,6 @@ void loop() {
             // Store it to serial buffer
             radio.bufferSerialAddChar(newChar);
             // Get one char and process it
-            // Serial.print((radio.streamPacketBuffer + radio.streamPacketBufferHead)->bytesIn); Serial.print(" state: ");
-            // switch ((radio.streamPacketBuffer + radio.streamPacketBufferHead)->state) {
-            //     case 0:
-            //         Serial.println("INIT");
-            //         break;
-            //     case 1:
-            //         Serial.println("STORING");
-            //         break;
-            //     case 2:
-            //         Serial.println("TAIL");
-            //         break;
-            //     case 3:
-            //         Serial.println("READY");
-            //         break;
-            // }
             radio.bufferStreamAddChar((radio.streamPacketBuffer + radio.streamPacketBufferHead), newChar);
             // Reset the poll timer to prevent contacting the host mid read
             radio.pollRefresh();
@@ -78,16 +63,11 @@ void loop() {
         if ((radio.streamPacketBuffer + radio.streamPacketBufferHead)->state == radio.STREAM_STATE_READY) { // Is there a stream packet waiting to get sent to the Host?
             // Has 80uS passed since the last time we read from the serial port?
             if (radio.bufferStreamTimeout()) {
-
                 // We are sure this is a streaming packet.
                 radio.streamPacketBufferHead++;
                 if (radio.streamPacketBufferHead > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
                     radio.streamPacketBufferHead = 0;
                 }
-                // Serial.print("Head: "); Serial.println(radio.streamPacketBufferHead);
-
-
-
             }
         }
 
@@ -95,7 +75,8 @@ void loop() {
             if (radio.streamPacketBufferHead != radio.streamPacketBufferTail) {
                 if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
                     radio.ackCounter++;
-                    (radio.streamPacketBuffer + radio.streamPacketBufferTail)->data[31] = radio.ackCounter;
+                    // TODO: Remove line below for prod, this is good for debugging tho
+                    // (radio.streamPacketBuffer + radio.streamPacketBufferTail)->data[31] = radio.ackCounter;
 
                     radio.bufferStreamSendToHost(radio.streamPacketBuffer + radio.streamPacketBufferTail);
 
@@ -103,7 +84,7 @@ void loop() {
                     if (radio.streamPacketBufferTail > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
                         radio.streamPacketBufferTail = 0;
                     }
-                } 
+                }
             }
         }
 
@@ -113,12 +94,13 @@ void loop() {
             if (radio.bufferSerialTimeout() && radio.bufferSerial.numberOfPacketsSent == 0 ) {
                 // In order to do checksumming we must only send one packet at a time
                 //  this stands as the first time we are going to send a packet!
-                if (radio.ackCounter < RFDUINOGZLL_MAX_PACKETS_ON_TX_BUFFER) {
-                    radio.ackCounter++;
-                    radio.sendPacketToHost();
-                } else {
-                    // Serial.println("Err: dropping packet");
-                }
+                radio.sendPacketToHost();
+                // if (radio.ackCounter < 1) {
+                //     radio.ackCounter++;
+                //     radio.sendPacketToHost();
+                // } else {
+                //     // Serial.println("Err: dropping packet");
+                // }
 
             }
         }
