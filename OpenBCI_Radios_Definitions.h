@@ -119,6 +119,7 @@
 #define OPENBCI_HOST_CMD_SYS_UP                 0x07
 #define OPENBCI_HOST_CMD_TIME_PIN_HIGH          0x08
 #define OPENBCI_HOST_CMD_TIME_PIN_LOW           0x09
+#define OPENBCI_HOST_CMD_BAUD_HYPER             0x0A
 
 // Raw data packet types/codes
 #define OPENBCI_PACKET_TYPE_RAW_AUX      = 3; // 0011
@@ -129,6 +130,7 @@
 // Possible baud rates
 #define OPENBCI_BAUD_RATE_DEFAULT 115200
 #define OPENBCI_BAUD_RATE_FAST 230400
+#define OPENBCI_BAUD_RATE_HYPER 921600
 
 // Private Radio Places
 #define OPENBCI_HOST_PRIVATE_POS_KEY 1
