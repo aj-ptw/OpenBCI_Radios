@@ -31,7 +31,7 @@
 #define OPENBCI_BUFFER_LENGTH_MULTI 500
 
 // Number of buffers
-#define OPENBCI_NUMBER_RADIO_BUFFERS 2
+#define OPENBCI_NUMBER_RADIO_BUFFERS 1
 #define OPENBCI_NUMBER_SERIAL_BUFFERS 15
 #define OPENBCI_NUMBER_STREAM_BUFFERS 20 // This should be at least one greater than poll time divided by packet interval to allow for the ack counter.
 

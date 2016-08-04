@@ -96,7 +96,7 @@ void loop() {
                 //  this stands as the first time we are going to send a packet!
                 // if (radio.ackCounter < 1) {
                 //     radio.ackCounter++;
-                //     radio.sendPacketToHost();
+                    radio.sendPacketToHost();
                 // } else {
                 //     // Serial.println("Err: dropping packet");
                 // }

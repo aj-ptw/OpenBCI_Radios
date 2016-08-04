@@ -1,0 +1,437 @@
+OpenBCI Endurance Test
+Push The World LLC
+START!
+Date and time: 2016-08-04 14:23:55
+
+Summary:
+	Total Packets: 0
+		Good Packets: 0
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:23:58
+
+
+
+Summary:
+	Total Packets: 1500
+		Good Packets: 1500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:04
+
+
+
+Summary:
+	Total Packets: 3000
+		Good Packets: 3000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:10
+
+
+
+Summary:
+	Total Packets: 4500
+		Good Packets: 4500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:16
+
+
+
+Summary:
+	Total Packets: 6000
+		Good Packets: 6000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:22
+
+
+
+Summary:
+	Total Packets: 7500
+		Good Packets: 7500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:28
+
+
+
+Summary:
+	Total Packets: 9000
+		Good Packets: 9000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:34
+
+
+
+Summary:
+	Total Packets: 10500
+		Good Packets: 10500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:40
+
+
+
+Summary:
+	Total Packets: 12000
+		Good Packets: 12000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:46
+
+
+
+Summary:
+	Total Packets: 13500
+		Good Packets: 13500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:52
+
+
+
+Summary:
+	Total Packets: 15000
+		Good Packets: 15000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:24:58
+
+
+
+Summary:
+	Total Packets: 16500
+		Good Packets: 16500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:04
+
+
+
+Summary:
+	Total Packets: 18000
+		Good Packets: 18000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:10
+
+
+
+Summary:
+	Total Packets: 19500
+		Good Packets: 19500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:16
+
+
+
+Summary:
+	Total Packets: 21000
+		Good Packets: 21000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:22
+
+
+
+Summary:
+	Total Packets: 22500
+		Good Packets: 22500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:28
+
+
+
+Summary:
+	Total Packets: 24000
+		Good Packets: 24000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:34
+
+
+
+Summary:
+	Total Packets: 25500
+		Good Packets: 25500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:40
+
+
+
+Summary:
+	Total Packets: 27000
+		Good Packets: 27000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:46
+
+
+
+Summary:
+	Total Packets: 28500
+		Good Packets: 28500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:52
+
+
+
+Summary:
+	Total Packets: 30000
+		Good Packets: 30000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:25:58
+
+
+
+Summary:
+	Total Packets: 31500
+		Good Packets: 31500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:04
+
+
+
+Summary:
+	Total Packets: 33000
+		Good Packets: 33000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:10
+
+
+
+Summary:
+	Total Packets: 34500
+		Good Packets: 34500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:16
+
+
+
+Summary:
+	Total Packets: 36000
+		Good Packets: 36000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:22
+
+
+
+Summary:
+	Total Packets: 37500
+		Good Packets: 37500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:28
+
+
+
+Summary:
+	Total Packets: 39000
+		Good Packets: 39000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:34
+
+
+
+Summary:
+	Total Packets: 40500
+		Good Packets: 40500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:40
+
+
+
+Summary:
+	Total Packets: 42000
+		Good Packets: 42000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:46
+
+
+
+Summary:
+	Total Packets: 43500
+		Good Packets: 43500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:52
+
+
+
+Summary:
+	Total Packets: 45000
+		Good Packets: 45000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:26:58
+
+
+
+Summary:
+	Total Packets: 46500
+		Good Packets: 46500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:04
+
+
+
+Summary:
+	Total Packets: 48000
+		Good Packets: 48000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:10
+
+
+
+Summary:
+	Total Packets: 49500
+		Good Packets: 49500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:16
+
+
+
+Summary:
+	Total Packets: 51000
+		Good Packets: 51000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:22
+
+
+
+Summary:
+	Total Packets: 52500
+		Good Packets: 52500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:28
+
+
+
+Summary:
+	Total Packets: 54000
+		Good Packets: 54000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:34
+
+
+
+Summary:
+	Total Packets: 55500
+		Good Packets: 55500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:40
+
+
+
+Summary:
+	Total Packets: 57000
+		Good Packets: 57000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:46
+
+
+
+Summary:
+	Total Packets: 58500
+		Good Packets: 58500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:52
+
+
+
+Summary:
+	Total Packets: 60000
+		Good Packets: 60000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:27:58
+
+
+
+Summary:
+	Total Packets: 61500
+		Good Packets: 61500
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:28:03
+
+
+
+Summary:
+	Total Packets: 63000
+		Good Packets: 63000
+		Bad Packets: 0
+	Date and time: 2016-08-04 14:28:09
+
+err: expected 241 got 242 at 2016-08-04 14:28:12
+
+
+Summary:
+	Total Packets: 64500
+		Good Packets: 64499
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:15
+
+
+
+Summary:
+	Total Packets: 66000
+		Good Packets: 65999
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:21
+
+
+
+Summary:
+	Total Packets: 67500
+		Good Packets: 67499
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:27
+
+
+
+Summary:
+	Total Packets: 69000
+		Good Packets: 68999
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:33
+
+
+
+Summary:
+	Total Packets: 70500
+		Good Packets: 70499
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:39
+
+
+
+Summary:
+	Total Packets: 72000
+		Good Packets: 71999
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:45
+
+
+
+Summary:
+	Total Packets: 73500
+		Good Packets: 73499
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:51
+
+
+
+Summary:
+	Total Packets: 75000
+		Good Packets: 74999
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:28:57
+
+
+
+Summary:
+	Total Packets: 76500
+		Good Packets: 76499
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:29:03
+
+
+
+Summary:
+	Total Packets: 78000
+		Good Packets: 77999
+		Bad Packets: 1
+	Date and time: 2016-08-04 14:29:09
+
+err: expected 15 got 16 at 2016-08-04 14:29:15
+
+
+Summary:
+	Total Packets: 79500
+		Good Packets: 79498
+		Bad Packets: 2
+	Date and time: 2016-08-04 14:29:15
+

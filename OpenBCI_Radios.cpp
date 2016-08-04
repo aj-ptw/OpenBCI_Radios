@@ -110,9 +110,9 @@ void OpenBCI_Radios_Class::configure(uint8_t mode, uint32_t channelNumber) {
 
         // get the buffers ready
         bufferRadioReset(bufferRadio);
-        bufferRadioReset(bufferRadio + 1);
+        // bufferRadioReset(bufferRadio + 1);
         bufferRadioClean(bufferRadio);
-        bufferRadioClean(bufferRadio + 1);
+        // bufferRadioClean(bufferRadio + 1);
         streamPacketBufferHead = 0;
         streamPacketBufferTail = 0;
         for (int i = 0; i < OPENBCI_NUMBER_STREAM_BUFFERS; i++) {
@@ -1306,17 +1306,19 @@ void OpenBCI_Radios_Class::bufferRadioReset(BufferRadio *buf) {
  * @author AJ Keller (@pushtheworldllc)
  */
 boolean OpenBCI_Radios_Class::bufferRadioSwitchToOtherBuffer(void) {
-    // current radio buffer is set to the first one
-    if (currentRadioBuffer == bufferRadio) {
-        if (bufferRadioReadyForNewPage(bufferRadio + 1)) {
-            currentRadioBuffer++;
-            return true;
-        }
-    // current radio buffer is set to the second one
-    } else {
-        if (bufferRadioReadyForNewPage(bufferRadio)) {
-            currentRadioBuffer--;
-            return true;
+    if (OPENBCI_NUMBER_RADIO_BUFFERS == 2) {
+        // current radio buffer is set to the first one
+        if (currentRadioBuffer == bufferRadio) {
+            if (bufferRadioReadyForNewPage(bufferRadio + 1)) {
+                currentRadioBuffer++;
+                return true;
+            }
+        // current radio buffer is set to the second one
+        } else {
+            if (bufferRadioReadyForNewPage(bufferRadio)) {
+                currentRadioBuffer--;
+                return true;
+            }
         }
     }
     return false;
@@ -1487,6 +1489,16 @@ void OpenBCI_Radios_Class::bufferStreamAddChar(StreamPacketBuffer *buf, char new
     }
 }
 
+/**
+ * @description Used to add a packet to the of steaming data to the current
+ *  `streamPacketBufferHead` and then increment the head. Will wrap around if
+ *  need be to avoid moving the head past `OPENBCI_NUMBER_STREAM_BUFFERS`.
+ * @param `data` {char *} - The data packet you want to add of length
+ *  `OPENBCI_MAX_PACKET_SIZE_BYTES` (32)
+ * @returns {boolean} - `true` if able to add it. Currently this func will always
+ *  return `true`, however this allows for greater flexiblity in the future.
+ * @author AJ Keller (@pushtheworldllc)
+ */
 boolean OpenBCI_Radios_Class::bufferStreamAddData(char *data) {
 
     bufferStreamStoreData(streamPacketBuffer + streamPacketBufferHead, data);
@@ -1498,6 +1510,7 @@ boolean OpenBCI_Radios_Class::bufferStreamAddData(char *data) {
 
     return true;
 }
+
 
 void OpenBCI_Radios_Class::bufferStreamFlush(StreamPacketBuffer *buf) {
     buf->flushing = true;
@@ -1518,18 +1531,8 @@ void OpenBCI_Radios_Class::bufferStreamFlushBuffers(void) {
             streamPacketBufferTail = 0;
         }
     }
-    //
-    // if (!bufferStreamReadyForNewPacket(streamPacketBuffer)) {
-    //     bufferStreamFlush(streamPacketBuffer);
-    //     bufferStreamReset(streamPacketBuffer);
-    // } else if (!bufferStreamReadyForNewPacket(streamPacketBuffer + 1)) {
-    //     bufferStreamFlush(streamPacketBuffer + 1);
-    //     bufferStreamReset(streamPacketBuffer + 1);
-    // } else if (!bufferStreamReadyForNewPacket(streamPacketBuffer + 2)) {
-    //     bufferStreamFlush(streamPacketBuffer + 2);
-    //     bufferStreamReset(streamPacketBuffer + 2);
-    // }
 }
+
 
 boolean OpenBCI_Radios_Class::bufferStreamReadyForNewPacket(StreamPacketBuffer *buf) {
     return buf->bytesIn == 0 && !buf->flushing;
