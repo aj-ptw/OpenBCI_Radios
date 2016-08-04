@@ -31,8 +31,8 @@ public:
     typedef enum STREAM_STATE {
         STREAM_STATE_INIT,
         STREAM_STATE_STORING,
-        STREAM_STATE_READY,
-        STREAM_STATE_TAIL
+        STREAM_STATE_TAIL,
+        STREAM_STATE_READY
     };
     typedef enum HOST_MESSAGE {
         HOST_MESSAGE_SERIAL_ACK,
@@ -41,6 +41,7 @@ public:
         HOST_MESSAGE_COMMS_DOWN_POLL_TIME,
         HOST_MESSAGE_BAUD_FAST,
         HOST_MESSAGE_BAUD_DEFAULT,
+        HOST_MESSAGE_BAUD_HYPER,
         HOST_MESSAGE_SYS_UP,
         HOST_MESSAGE_SYS_DOWN,
         HOST_MESSAGE_CHAN,
@@ -52,9 +53,9 @@ public:
     };
     // STRUCTS
     typedef struct {
-      char      data[OPENBCI_MAX_PACKET_SIZE_BYTES];
-      uint8_t   positionRead;
-      uint8_t   positionWrite;
+        char      data[OPENBCI_MAX_PACKET_SIZE_BYTES];
+        uint8_t   positionRead;
+        uint8_t   positionWrite;
     } PacketBuffer;
 
     typedef struct {
@@ -188,6 +189,8 @@ public:
     BufferRadio bufferRadio[OPENBCI_NUMBER_RADIO_BUFFERS];
     uint8_t currentRadioBufferNum;
     BufferRadio *currentRadioBuffer;
+    uint8_t streamPacketBufferHead;
+    uint8_t streamPacketBufferTail;
     Buffer bufferSerial;
     PacketBuffer *currentPacketBufferSerial;
     // BOOLEANS

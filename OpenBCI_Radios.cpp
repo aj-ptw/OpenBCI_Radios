@@ -110,9 +110,14 @@ void OpenBCI_Radios_Class::configure(uint8_t mode, uint32_t channelNumber) {
 
         // get the buffers ready
         bufferRadioReset(bufferRadio);
-        bufferRadioReset(bufferRadio + 1);
+        // bufferRadioReset(bufferRadio + 1);
         bufferRadioClean(bufferRadio);
-        bufferRadioClean(bufferRadio + 1);
+        // bufferRadioClean(bufferRadio + 1);
+        streamPacketBufferHead = 0;
+        streamPacketBufferTail = 0;
+        for (int i = 0; i < OPENBCI_NUMBER_STREAM_BUFFERS; i++) {
+            bufferStreamReset(streamPacketBuffer + i);
+        }
         currentRadioBuffer = bufferRadio;
         currentRadioBufferNum = 0;
         bufferSerialReset(OPENBCI_NUMBER_SERIAL_BUFFERS);
@@ -161,8 +166,6 @@ void OpenBCI_Radios_Class::configureDevice(void) {
     sendingMultiPacket = false;
     streamPacketsHaveHeads = true;
 
-    bufferStreamReset();
-
     pollRefresh();
 
 }
@@ -193,9 +196,6 @@ void OpenBCI_Radios_Class::configureHost(void) {
     channelNumberSaveAttempted = false;
     printMessageToDriverFlag = false;
     systemUp = false;
-    bufferStreamReset(streamPacketBuffer);
-    bufferStreamReset(streamPacketBuffer + 1);
-    bufferStreamReset(streamPacketBuffer + 2);
 
 }
 
@@ -454,6 +454,7 @@ void OpenBCI_Radios_Class::printValidatedCommsTimeout(void) {
  *  `HOST_MESSAGE_COMMS_DOWN_POLL_TIME` - Print the messafe when the comms go down trying to change poll times.
  *  `HOST_MESSAGE_BAUD_FAST` - Baud rate swtiched to 230400
  *  `HOST_MESSAGE_BAUD_DEFAULT` - Baud rate swtiched to 115200
+ *  `HOST_MESSAGE_BAUD_HYPER` - Baud rate swtiched to 921600
  *  `HOST_MESSAGE_SYS_UP` - Print the system up message
  *  `HOST_MESSAGE_SYS_DOWN` - Print the system down message
  *  `HOST_MESSAGE_CHAN` - Print the channel number message
@@ -511,6 +512,16 @@ void OpenBCI_Radios_Class::printMessageToDriver(uint8_t code) {
             Serial.end();
             // Open the Serial connection
             Serial.begin(OPENBCI_BAUD_RATE_DEFAULT);
+            break;
+        case HOST_MESSAGE_BAUD_HYPER:
+            printSuccess();
+            printBaudRateChangeTo((int)OPENBCI_BAUD_RATE_HYPER);
+            printEOT();
+            delay(2);
+            // Close the current serial connection
+            Serial.end();
+            // Open the Serial connection
+            Serial.begin(OPENBCI_BAUD_RATE_HYPER);
             break;
         case HOST_MESSAGE_CHAN:
             printValidatedCommsTimeout();
@@ -617,6 +628,10 @@ void OpenBCI_Radios_Class::processCommsFailureSinglePacket(void) {
                 break;
             case OPENBCI_HOST_CMD_BAUD_FAST:
                 msgToPrint = HOST_MESSAGE_BAUD_FAST;
+                printMessageToDriverFlag = true;
+                break;
+            case OPENBCI_HOST_CMD_BAUD_HYPER:
+                msgToPrint = HOST_MESSAGE_BAUD_HYPER;
                 printMessageToDriverFlag = true;
                 break;
             case OPENBCI_HOST_CMD_POLL_TIME_GET:
@@ -731,6 +746,12 @@ byte OpenBCI_Radios_Class::processOutboundBufferCharDouble(char *buffer) {
                 return ACTION_RADIO_SEND_NONE;
             case OPENBCI_HOST_CMD_BAUD_FAST:
                 msgToPrint = HOST_MESSAGE_BAUD_FAST;
+                printMessageToDriverFlag = true;
+                // Clear the serial buffer
+                bufferSerialReset(1);
+                return ACTION_RADIO_SEND_NONE;
+            case OPENBCI_HOST_CMD_BAUD_HYPER:
+                msgToPrint = HOST_MESSAGE_BAUD_HYPER;
                 printMessageToDriverFlag = true;
                 // Clear the serial buffer
                 bufferSerialReset(1);
@@ -960,7 +981,7 @@ int OpenBCI_Radios_Class::sendPacketToHost(void) {
 
     bufferSerial.numberOfPacketsSent++;
 
-    // Reset the stream buffer
+    // Reset the stream buffers
     bufferStreamReset();
 
     return packetNumber;
@@ -1143,8 +1164,9 @@ void OpenBCI_Radios_Class::bufferRadioFlush(BufferRadio *buf) {
  * @author AJ Keller (@pushtheworldllc)
  */
 void OpenBCI_Radios_Class::bufferRadioFlushBuffers(void) {
-    bufferRadioProcessSingle(bufferRadio);
-    bufferRadioProcessSingle(bufferRadio + 1);
+    for (int i = 0; i < OPENBCI_NUMBER_RADIO_BUFFERS; i++) {
+        bufferRadioProcessSingle(bufferRadio + i);
+    }
 }
 
 /**
@@ -1305,17 +1327,19 @@ void OpenBCI_Radios_Class::bufferRadioReset(BufferRadio *buf) {
  * @author AJ Keller (@pushtheworldllc)
  */
 boolean OpenBCI_Radios_Class::bufferRadioSwitchToOtherBuffer(void) {
-    // current radio buffer is set to the first one
-    if (currentRadioBuffer == bufferRadio) {
-        if (bufferRadioReadyForNewPage(bufferRadio + 1)) {
-            currentRadioBuffer++;
-            return true;
-        }
-    // current radio buffer is set to the second one
-    } else {
-        if (bufferRadioReadyForNewPage(bufferRadio)) {
-            currentRadioBuffer--;
-            return true;
+    if (OPENBCI_NUMBER_RADIO_BUFFERS == 2) {
+        // current radio buffer is set to the first one
+        if (currentRadioBuffer == bufferRadio) {
+            if (bufferRadioReadyForNewPage(bufferRadio + 1)) {
+                currentRadioBuffer++;
+                return true;
+            }
+        // current radio buffer is set to the second one
+        } else {
+            if (bufferRadioReadyForNewPage(bufferRadio)) {
+                currentRadioBuffer--;
+                return true;
+            }
         }
     }
     return false;
@@ -1427,6 +1451,8 @@ void OpenBCI_Radios_Class::bufferStreamAddChar(StreamPacketBuffer *buf, char new
                 buf->typeByte = newChar;
                 // Change the state to ready
                 buf->state = STREAM_STATE_READY;
+                // Serial.print(33); Serial.print(" state: "); Serial.print("READY-");
+                // Serial.println((streamPacketBuffer + streamPacketBufferHead)->state);
             } else {
                 // Reset the state machine
                 buf->state = STREAM_STATE_INIT;
@@ -1484,19 +1510,34 @@ void OpenBCI_Radios_Class::bufferStreamAddChar(StreamPacketBuffer *buf, char new
     }
 }
 
+/**
+ * @description Used to add a packet to the of steaming data to the current
+ *  `streamPacketBufferHead` and then increment the head. Will wrap around if
+ *  need be to avoid moving the head past `OPENBCI_NUMBER_STREAM_BUFFERS`.
+ * @param `data` {char *} - The data packet you want to add of length
+ *  `OPENBCI_MAX_PACKET_SIZE_BYTES` (32)
+ * @returns {boolean} - `true` if able to add it. Currently this func will always
+ *  return `true`, however this allows for greater flexiblity in the future.
+ * @author AJ Keller (@pushtheworldllc)
+ */
 boolean OpenBCI_Radios_Class::bufferStreamAddData(char *data) {
-    if (bufferStreamReadyForNewPacket(streamPacketBuffer)) {
-        bufferStreamStoreData(streamPacketBuffer, data);
-    } else if (bufferStreamReadyForNewPacket(streamPacketBuffer + 1)) {
-        bufferStreamStoreData((streamPacketBuffer + 1), data);
-    } else if (bufferStreamReadyForNewPacket(streamPacketBuffer + 2)) {
-        bufferStreamStoreData((streamPacketBuffer + 2), data);
-    } else {
-        return false;
+
+    bufferStreamStoreData(streamPacketBuffer + streamPacketBufferHead, data);
+
+    streamPacketBufferHead++;
+    if (streamPacketBufferHead > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
+        streamPacketBufferHead = 0;
     }
+
     return true;
 }
 
+/**
+ * @description Used to flush a StreamPacketBuffer to the serial port with a
+ *  head byte and a formated tail byte based off the `typeByte`.
+ * @param `buf` {StreamPacketBuffer *} - The stream packet buffer to add the char to.
+ * @author AJ Keller (@pushtheworldllc)
+ **/
 void OpenBCI_Radios_Class::bufferStreamFlush(StreamPacketBuffer *buf) {
     buf->flushing = true;
     Serial.write(0xA0);
@@ -1507,19 +1548,31 @@ void OpenBCI_Radios_Class::bufferStreamFlush(StreamPacketBuffer *buf) {
     buf->flushing = false;
 }
 
+/**
+ * @description Used to flush a StreamPacketBuffer if the `streamPacketBufferTail`
+ *  is not equal to the `streamPacketBufferHead`. This function will also reset
+ *  the buffer after the buffer is flushed. Further it will increment `streamPacketBufferTail`
+ *  and wrap that around if necessary.
+ * @author AJ Keller (@pushtheworldllc)
+ **/
 void OpenBCI_Radios_Class::bufferStreamFlushBuffers(void) {
-    if (!bufferStreamReadyForNewPacket(streamPacketBuffer)) {
-        bufferStreamFlush(streamPacketBuffer);
-        bufferStreamReset(streamPacketBuffer);
-    } else if (!bufferStreamReadyForNewPacket(streamPacketBuffer + 1)) {
-        bufferStreamFlush(streamPacketBuffer + 1);
-        bufferStreamReset(streamPacketBuffer + 1);
-    } else if (!bufferStreamReadyForNewPacket(streamPacketBuffer + 2)) {
-        bufferStreamFlush(streamPacketBuffer + 2);
-        bufferStreamReset(streamPacketBuffer + 2);
+    if (streamPacketBufferTail != streamPacketBufferHead) {
+        bufferStreamFlush(streamPacketBuffer + streamPacketBufferTail);
+        bufferStreamReset(streamPacketBuffer + streamPacketBufferTail);
+        streamPacketBufferTail++;
+        if (streamPacketBufferTail > (OPENBCI_NUMBER_STREAM_BUFFERS - 1)) {
+            streamPacketBufferTail = 0;
+        }
     }
 }
 
+/**
+ * @description Used to determine if a stream packet buffer is ready for a new packet
+ *  this function is no longer being used with the head/tail system. Will look to
+ *  deprecate it soon.
+ * @param `buf` {StreamPacketBuffer *} - The stream packet buffer to add the char to.
+ * @author AJ Keller (@pushtheworldllc)
+ **/
 boolean OpenBCI_Radios_Class::bufferStreamReadyForNewPacket(StreamPacketBuffer *buf) {
     return buf->bytesIn == 0 && !buf->flushing;
 }
@@ -1541,10 +1594,11 @@ boolean OpenBCI_Radios_Class::bufferStreamReadyToSendToHost(StreamPacketBuffer *
  * @author AJ Keller (@pushtheworldllc)
  */
 void OpenBCI_Radios_Class::bufferStreamReset(void) {
-    streamPacketBuffer->flushing = false;
-    streamPacketBuffer->bytesIn = 0;
-    streamPacketBuffer->typeByte = 0;
-    streamPacketBuffer->state = STREAM_STATE_INIT;
+    for (int i = 0; i < OPENBCI_NUMBER_STREAM_BUFFERS; i++) {
+        bufferStreamReset(streamPacketBuffer + i);
+    }
+    streamPacketBufferHead = 0;
+    streamPacketBufferTail = 0;
 }
 
 /**
@@ -1568,7 +1622,6 @@ void OpenBCI_Radios_Class::bufferStreamReset(StreamPacketBuffer *buf) {
 boolean OpenBCI_Radios_Class::bufferStreamSendToHost(StreamPacketBuffer *buf) {
 
     byte packetType = byteIdMakeStreamPacketType(buf->typeByte);
-    // Serial.print("Packet type: "); Serial.println(packetType);
 
     char byteId = byteIdMake(true,packetType,buf->data + 1, OPENBCI_MAX_DATA_BYTES_IN_PACKET); // 31 bytes
 
@@ -1591,6 +1644,14 @@ boolean OpenBCI_Radios_Class::bufferStreamSendToHost(StreamPacketBuffer *buf) {
     return true;
 }
 
+/**
+ * @description Used to flush a StreamPacketBuffer to the serial port with a
+ *  head byte and a formated tail byte based off the `typeByte`.
+ * @param `buf` {StreamPacketBuffer *} - The stream packet buffer to add the char to.
+ * @param `data` {char *} - A stream packet buffer in raw char buffer form fresh
+ *   from the radio.
+ * @author AJ Keller (@pushtheworldllc)
+ **/
 void OpenBCI_Radios_Class::bufferStreamStoreData(StreamPacketBuffer *buf, char *data) {
     buf->bytesIn = OPENBCI_MAX_DATA_BYTES_IN_PACKET;
     buf->typeByte = outputGetStopByteFromByteId(data[0]);
