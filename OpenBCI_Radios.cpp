@@ -1143,8 +1143,9 @@ void OpenBCI_Radios_Class::bufferRadioFlush(BufferRadio *buf) {
  * @author AJ Keller (@pushtheworldllc)
  */
 void OpenBCI_Radios_Class::bufferRadioFlushBuffers(void) {
-    bufferRadioProcessSingle(bufferRadio);
-    bufferRadioProcessSingle(bufferRadio + 1);
+    for (int i = 0; i < OPENBCI_NUMBER_RADIO_BUFFERS; i++) {
+        bufferRadioProcessSingle(bufferRadio + i);
+    }
 }
 
 /**
