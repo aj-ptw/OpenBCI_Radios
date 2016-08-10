@@ -1,3 +1,9 @@
+# v2.0.0-rc.7 - Release Candidate 7
+
+### Bug Fixes
+
+* Increased time it takes to time out a serial page write to 0.5ms from 5ms
+
 # v2.0.0-rc.6 - Release Candidate 6
 
 ### New Features
