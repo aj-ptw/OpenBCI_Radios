@@ -21,12 +21,13 @@ MIT license
 // CONSTRUCTOR
 OpenBCI_Radios_Class::OpenBCI_Radios_Class() {
   // Set defaults
-  radioMode = OPENBCI_MODE_DEVICE; // Device mode
-  radioChannel = 25; // Channel 18
-  debugMode = false; // Set true if doing dongle-dongle sim
   ackCounter = 0;
+  debugMode = false; // Set true if doing dongle-dongle sim
   lastTimeHostHeardFromDevice = 0;
   lastTimeSerialRead = 0;
+  pollTime = 50;
+  radioMode = OPENBCI_MODE_DEVICE; // Device mode
+  radioChannel = 25; // Channel 18
   systemUp = false;
 }
 
@@ -104,7 +105,7 @@ void OpenBCI_Radios_Class::configure(uint8_t mode, uint32_t channelNumber) {
     // Check to see if we need to set the poll time
     //  this is only the case on the first run of the program
     if (needToSetPollTime()) {
-      setPollTime(OPENBCI_TIMEOUT_PACKET_POLL_MS);
+      setPollTime(pollTime);
     }
     pollTime = getPollTime();
 
@@ -281,17 +282,17 @@ boolean OpenBCI_Radios_Class::setChannelNumber(uint32_t channelNumber) {
 
   uint32_t *p = ADDRESS_OF_PAGE(RFDUINOGZLL_FLASH_MEM_ADDR);
   boolean willSetPollTime = false;
-  uint32_t pollTime = 0xFFFFFFFF;
+  uint32_t pTime = 0xFFFFFFFF;
   // If I don't need to set the channel number then grab that channel number
   if (!needToSetPollTime()) {
-    pollTime = getPollTime();
+    pTime = getPollTime();
     willSetPollTime = true;
   }
 
   int rc;
   if (flashNonVolatileMemory()) {
     if (willSetPollTime) {
-      if (flashWrite(p + 1, pollTime) > 0) {
+      if (flashWrite(p + 1, pTime) > 0) {
         return false;
       }
     }
@@ -310,11 +311,11 @@ boolean OpenBCI_Radios_Class::setChannelNumber(uint32_t channelNumber) {
 /**
 * @description Store a poll time to memory. Allows for poll time to be retained
 *  after power down
-* @param pollTime {uint32_t} - The new poll time to store to memory
+* @param pTime {uint32_t} - The new poll time to store to memory
 * @return {boolean} - If the pollTime was successfully set
 * @author AJ Keller (@pushtheworldllc)
 */
-boolean OpenBCI_Radios_Class::setPollTime(uint32_t pollTime) {
+boolean OpenBCI_Radios_Class::setPollTime(uint32_t pTime) {
 
   uint32_t *p = ADDRESS_OF_PAGE(RFDUINOGZLL_FLASH_MEM_ADDR);
   boolean willSetChannel = false;
@@ -332,7 +333,7 @@ boolean OpenBCI_Radios_Class::setPollTime(uint32_t pollTime) {
         return false;
       }
     }
-    rc = flashWrite(p + 1, pollTime); // Always stored 1 more than chan
+    rc = flashWrite(p + 1, pTime); // Always stored 1 more than chan
     if (rc == 0) {
       return true;
     } else if (rc == 1) {

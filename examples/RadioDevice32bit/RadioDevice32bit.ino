@@ -44,7 +44,7 @@ void loop() {
     radio.singleCharMsg[0] = (char)ORPM_DEVICE_SERIAL_OVERFLOW;
 
     if (RFduinoGZLL.sendToHost(radio.singleCharMsg,1)) {
-      radio.bufferSerial.overflowed = false;  
+      radio.bufferSerial.overflowed = false;
     }
   } else {
     if (Serial.available()) { // Is there new serial data available?
