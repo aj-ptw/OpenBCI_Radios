@@ -2014,13 +2014,6 @@ boolean OpenBCI_Radios_Class::processDeviceRadioCharData(char *data, int len) {
   // The packetNumber is embedded in the first byte, the byteId
   int packetNumber = byteIdGetPacketNumber(data[0]);
 
-  if (byteIdGetIsStream(data[0])) {
-    // Send any stream packet that comes back, back!
-    // RFduinoGZLL.sendToHost((const char*)data,len);
-    // Check to see if there is a packet to send back
-    return packetToSend();
-  }
-
   switch (bufferRadioProcessPacket(data,len)) {
     case OPENBCI_PROCESS_RADIO_FAIL_SWITCH_LAST:
     case OPENBCI_PROCESS_RADIO_FAIL_SWITCH_NOT_LAST:
